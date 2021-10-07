@@ -1,6 +1,6 @@
 Package: luz
 Title: Higher Level 'API' for 'torch'
-Version: 0.1.0
+Version: 0.2.0
 Authors@R: c(
     person("Daniel", "Falbel", email = "daniel@rstudio.com", role = c("aut", "cre", "cph")),
     person(family = "RStudio", role = c("cph"))
@@ -15,20 +15,21 @@ License: MIT + file LICENSE
 URL: https://mlverse.github.io/luz/, https://github.com/mlverse/luz
 Encoding: UTF-8
 RoxygenNote: 7.1.1
-Imports: torch (>= 0.4.0), magrittr, zeallot, rlang, coro, glue,
+Imports: torch (>= 0.5.0), magrittr, zeallot, rlang, coro, glue,
         progress, R6, generics, purrr, ellipsis, fs, prettyunits, cli
 Suggests: knitr, rmarkdown, testthat (>= 3.0.0), covr, Metrics, withr,
         vdiffr, ggplot2, dplyr
 VignetteBuilder: knitr
 Config/testthat/edition: 3
-Collate: 'accelerator.R' 'utils.R' 'callbacks.R'
-        'callbacks-interrupt.R' 'callbacks-profile.R' 'context.R'
-        'metrics.R' 'metrics-auc.R' 'module-plot.R' 'module-print.R'
-        'module.R' 'reexports.R' 'serialization.R'
+Collate: 'accelerator.R' 'as_dataloader.R' 'utils.R' 'callbacks.R'
+        'callbacks-interrupt.R' 'callbacks-monitor-metrics.R'
+        'callbacks-profile.R' 'context.R' 'lr-finder.R' 'metrics.R'
+        'metrics-auc.R' 'module-plot.R' 'module-print.R' 'module.R'
+        'reexports.R' 'serialization.R'
 NeedsCompilation: no
-Packaged: 2021-06-16 17:56:07 UTC; dfalbel
+Packaged: 2021-10-07 20:24:10 UTC; dfalbel
 Author: Daniel Falbel [aut, cre, cph],
   RStudio [cph]
 Maintainer: Daniel Falbel <daniel@rstudio.com>
 Repository: CRAN
-Date/Publication: 2021-06-17 08:40:04 UTC
+Date/Publication: 2021-10-07 20:50:02 UTC

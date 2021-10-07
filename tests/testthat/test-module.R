@@ -160,3 +160,145 @@ test_that("predict can use a progress bar", {
   expect_equal(output$ctx$opt_hparams$lr, 0.001)
 })
 
+test_that("valid_data works", {
+
+  model <- get_model()
+  model <- model %>%
+    setup(
+      loss = torch::nn_mse_loss(),
+      optimizer = torch::optim_adam
+    ) %>%
+    set_hparams(input_size = 10, output_size = 1) %>%
+    set_opt_hparams(lr = 0.001)
+
+  fitted <- model %>% fit(
+    list(torch::torch_randn(100,10), torch::torch_randn(100, 1)),
+    epochs = 10,
+    valid_data = 0.1,
+    verbose = FALSE
+  )
+
+  expect_true("valid" %in% get_metrics(fitted)$set)
+
+  expect_error(class= "value_error", regexp = "2", {
+    model %>% fit(
+      list(torch::torch_randn(100,10), torch::torch_randn(100, 1)),
+      epochs = 10,
+      valid_data = 2,
+      verbose = FALSE
+    )
+  })
+
+  expect_error(class= "value_error", regexp = "-1", {
+    model %>% fit(
+      list(torch::torch_randn(100,10), torch::torch_randn(100, 1)),
+      epochs = 10,
+      valid_data = -1,
+      verbose = FALSE
+    )
+  })
+
+  dl <- get_dl()
+  expect_error(class= "value_error", regexp = "dataloader", {
+    model %>% fit(
+      dl,
+      epochs = 10,
+      valid_data = 0.2,
+      verbose = FALSE
+    )
+  })
+
+})
+
+test_that("we can pass dataloader_options", {
+
+  model <- get_model()
+  model <- model %>%
+    setup(
+      loss = torch::nn_mse_loss(),
+      optimizer = torch::optim_adam
+    ) %>%
+    set_hparams(input_size = 10, output_size = 1) %>%
+    set_opt_hparams(lr = 0.001)
+
+  x <- list(torch::torch_randn(100,10), torch::torch_randn(100, 1))
+
+  fitted <- model %>% fit(
+    x,
+    epochs = 1,
+    valid_data = 0.1,
+    verbose = FALSE,
+    dataloader_options = list(batch_size = 2, shuffle = FALSE)
+  )
+
+  expect_length(fitted$records$profile$train_step, 45)
+
+  dl <- get_dl()
+  expect_error(regexp = "already a dataloader", {
+    model %>% fit(
+      dl,
+      epochs = 1,
+      verbose = FALSE,
+      dataloader_options = list(batch_size = 2, shuffle = FALSE)
+    )
+  })
+
+  expect_warning(regexp = "already a dataloader", {
+    model %>% fit(
+      x,
+      epochs = 1,
+      verbose = FALSE,
+      valid_data = dl,
+      dataloader_options = list(batch_size = 2, shuffle = FALSE)
+    )
+  })
+
+  pred <- predict(fitted, x, dataloader_options = list(batch_size = 45, drop_last = TRUE))
+  expect_tensor_shape(pred, c(90, 1))
+
+  expect_warning(regexp = "already a dataloader", {
+    predict(fitted, dl, dataloader_options = list(batch_size = 45, drop_last = TRUE))
+  })
+
+  expect_warning(regexp = "ignored for predictions", {
+    predict(fitted, x, dataloader_options = list(shuffle = TRUE))
+  })
+
+})
+
+test_that("evaluate works", {
+
+  set.seed(1)
+  torch_manual_seed(1)
+
+  model <- get_model()
+  model <- model %>%
+    setup(
+      loss = torch::nn_mse_loss(),
+      optimizer = torch::optim_adam,
+      metrics = list(
+        luz_metric_mae(),
+        luz_metric_mse(),
+        luz_metric_rmse()
+      )
+    ) %>%
+    set_hparams(input_size = 10, output_size = 1) %>%
+    set_opt_hparams(lr = 0.001)
+
+  x <- list(torch::torch_randn(100,10), torch::torch_randn(100, 1))
+
+  fitted <- model %>% fit(
+    x,
+    epochs = 1,
+    verbose = FALSE,
+    dataloader_options = list(batch_size = 2, shuffle = FALSE)
+  )
+
+  e <- evaluate(fitted, x)
+
+  expect_equal(nrow(get_metrics(e)), 4)
+  expect_equal(ncol(get_metrics(e)), 2)
+
+  expect_snapshot(print(e))
+})
+

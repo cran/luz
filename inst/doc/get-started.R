@@ -111,6 +111,59 @@ library(torch)
 #    }
 #  )
 
+## ----include=FALSE, eval = torch::torch_is_installed()------------------------
+library(luz)
+torch::torch_manual_seed(1)
+get_model <- function() {
+  torch::nn_module(
+    initialize = function(input_size, output_size) {
+      self$fc <- torch::nn_linear(prod(input_size), prod(output_size))
+      self$output_size <- output_size
+    },
+    forward = function(x) {
+      out <- x %>%
+        torch::torch_flatten(start_dim = 2) %>%
+        self$fc()
+      out$view(c(x$shape[1], self$output_size))
+    }
+  )
+}
+
+model <- get_model()
+model <- model %>%
+  setup(
+    loss = torch::nn_mse_loss(),
+    optimizer = torch::optim_adam,
+    metrics = list(
+      luz_metric_mae(),
+      luz_metric_mse(),
+      luz_metric_rmse()
+    )
+  ) %>%
+  set_hparams(input_size = 10, output_size = 1) %>%
+  set_opt_hparams(lr = 0.001)
+
+x <- list(torch::torch_randn(100,10), torch::torch_randn(100, 1))
+
+fitted <- model %>% fit(
+  x,
+  epochs = 1,
+  verbose = FALSE,
+  dataloader_options = list(batch_size = 2, shuffle = FALSE)
+)
+
+evaluation <- fitted %>% evaluate(data = x)
+
+## ---- eval = FALSE------------------------------------------------------------
+#  evaluation <- fitted %>% evaluate(data = valid_dl)
+#  metrics <- get_metrics(evaluation)
+#  print(evaluation)
+
+## ----echo=FALSE, eval=torch::torch_is_installed()-----------------------------
+options(cli.unicode = FALSE)
+metrics <- get_metrics(evaluation)
+print(evaluation)
+
 ## ---- eval = FALSE------------------------------------------------------------
 #  print_callback <- luz_callback(
 #    name = "print_callback",

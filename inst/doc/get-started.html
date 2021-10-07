@@ -276,6 +276,21 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
 <p><strong>Note</strong>: It’s good practice that the <code>compute</code> metric returns regular R values instead of torch tensors and other parts of luz will expect that.</p>
 </div>
+<div id="evaluate" class="section level2">
+<h2>Evaluate</h2>
+<p>Once a model has been trained you might want to evaluate its performance in a different dataset. For that reason, luz provides the <code>?evaluate</code> function that takes a fitted model and a dataset and computes the metrics attached to the model.</p>
+<p>Evaluate returns a <code>luz_module_evaluation</code> object that you can query for metrics using the <code>get_metrics</code> function or simply <code>print</code> to see the results.</p>
+<p>For example:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>evaluation <span class="ot">&lt;-</span> fitted <span class="sc">%&gt;%</span> <span class="fu">evaluate</span>(<span class="at">data =</span> valid_dl)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>metrics <span class="ot">&lt;-</span> <span class="fu">get_metrics</span>(evaluation)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(evaluation)</span></code></pre></div>
+<pre><code>#&gt; A `luz_module_evaluation`
+#&gt; -- Results ---------------------------------------------------------------------
+#&gt; loss: 1.8892
+#&gt; mae: 1.0522
+#&gt; mse: 1.645
+#&gt; rmse: 1.2826</code></pre>
+</div>
 <div id="customizing-with-callbacks" class="section level2">
 <h2>Customizing with callbacks</h2>
 <p>Luz provides different ways to customize the training progress depending on the level of control you need in the training loop. The fastest way and the more ‘reusable’, in the sense that you can create training modification that can be used in many different situations is via <strong>callbacks</strong>.</p>
@@ -288,26 +303,26 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </ul>
 <p>You can also implement custom callbacks that modify or act specifically for your training procedure. For example:</p>
 <p>Let’s implement a callback that prints ‘Iteration <code>n</code>’ (where <code>n</code> is the iteration number) for every batch in the training set and ‘Done’ when an epoch is finished. For that task we use the <code>luz_callback</code> function:</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>print_callback <span class="ot">&lt;-</span> <span class="fu">luz_callback</span>(</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">name =</span> <span class="st">&quot;print_callback&quot;</span>,</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">initialize =</span> <span class="cf">function</span>(message) {</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    self<span class="sc">$</span>message <span class="ot">&lt;-</span> message</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  },</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">on_train_batch_end =</span> <span class="cf">function</span>() {</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">cat</span>(<span class="st">&quot;Iteration &quot;</span>, ctx<span class="sc">$</span>iter, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  },</span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">on_epoch_end =</span> <span class="cf">function</span>() {</span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">cat</span>(self<span class="sc">$</span>message, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>print_callback <span class="ot">&lt;-</span> <span class="fu">luz_callback</span>(</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">name =</span> <span class="st">&quot;print_callback&quot;</span>,</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">initialize =</span> <span class="cf">function</span>(message) {</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    self<span class="sc">$</span>message <span class="ot">&lt;-</span> message</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  },</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">on_train_batch_end =</span> <span class="cf">function</span>() {</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">cat</span>(<span class="st">&quot;Iteration &quot;</span>, ctx<span class="sc">$</span>iter, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  },</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">on_epoch_end =</span> <span class="cf">function</span>() {</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">cat</span>(self<span class="sc">$</span>message, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
 <p><code>luz_callback()</code> takes a named list of function as argument where the name indicate the moment at which the callback should be called. For instance <code>on_train_batch_end()</code> is called for every batch at the end of the training procedure and <code>on_epoch()</code> end is called at the end of every epoch.</p>
 <p>The returned value of <code>luz_callback()</code> is a function that initializes an instance of the callback. Callbacks can have initialization parameters, like the name of a file you want to log the results, in this case, you can pass an <code>initialize</code> method when creating the callback definition and save these parameters to the <code>self</code> object. In the above example, the callback has a <code>message</code> parameter that is printed at the end of each epoch.</p>
 <p>Once a callback is defined it can be passed to the <code>fit</code> function via the <code>callbacks</code> parameter, eg:</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>fitted <span class="ot">&lt;-</span> net <span class="sc">%&gt;%</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">setup</span>(...) <span class="sc">%&gt;%</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit</span>(..., <span class="at">callbacks =</span> <span class="fu">list</span>(</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">print_callback</span>(<span class="at">message =</span> <span class="st">&quot;Done!&quot;</span>)</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  ))</span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>fitted <span class="ot">&lt;-</span> net <span class="sc">%&gt;%</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">setup</span>(...) <span class="sc">%&gt;%</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit</span>(..., <span class="at">callbacks =</span> <span class="fu">list</span>(</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">print_callback</span>(<span class="at">message =</span> <span class="st">&quot;Done!&quot;</span>)</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  ))</span></code></pre></div>
 <p>Callbacks can be called in many different positions of the training loop, including a combinations of them. Here’s an overview of possible callback <em>breakpoints</em>:</p>
 <pre><code>Start Fit
    - on_fit_begin
@@ -346,6 +361,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 End Fit</code></pre>
 <p>Every step market with a <code>on_*</code> is a point in the training procedure that is available for callbacks to be called.</p>
 <p>The other important part of callbacks is the <code>ctx</code> (context) object. See <code>help(&quot;ctx&quot;)</code> for details.</p>
+<p>By default, callbacks are called in the same order as they were passed to <code>fit</code> (<code>predict</code> or <code>evaluate</code>) but you can provide a <code>weight</code> attribute that will control the order that it will be called. For example if a callback has <code>weight = 10</code> and the other has <code>weigth = 1</code> then the first one is called after the second one. Callbacks that don’t specify a <code>weight</code> attribute are considered <code>weight = 0</code>. A few buillt-in callbacks in luz already provide a weith value, for example the <code>?luz_early_stopping_callback</code>, since in general we want to run it as the last thing in the loop.</p>
 <p>The <code>ctx</code> object is used in luz to share information between the training loop and callbacks, model methods and metrics. The table below describes information available in the <code>ctx</code> by default. Other callbacks could potentially modify these attributes or add new ones.</p>
 <table>
 <caption>Context attributes</caption>
@@ -378,15 +394,23 @@ End Fit</code></pre>
 </tr>
 <tr class="odd">
 <td><code>data</code></td>
-<td>Dataloader passed to the <code>data</code> argument in <code>fit</code>. Modified to yield data in the selected device.</td>
+<td>Current in use dataloader. When training it’s <code>ctx$train_data</code>, when doing validation its <code>ctx$valid_data</code>. It can also be the prediction dataset when in <code>predict</code>.</td>
 </tr>
 <tr class="even">
+<td><code>train_data</code></td>
+<td>Dataloader passed to the <code>data</code> argument in <code>fit</code>. Modified to yield data in the selected device.</td>
+</tr>
+<tr class="odd">
 <td><code>valid_data</code></td>
 <td>Dataloader passed to the <code>valid_data</code> argument in <code>fit</code>. Modified to yield data in the selected device.</td>
 </tr>
+<tr class="even">
+<td><code>min_epochs</code></td>
+<td>| Minimum number of epochs the model will be trained for.</td>
+</tr>
 <tr class="odd">
-<td><code>epochs</code></td>
-<td>Total number of epochs the model will be trained on.</td>
+<td><code>max_epochs</code></td>
+<td>| Maximum number of epochs the model will be trained for.</td>
 </tr>
 <tr class="even">
 <td><code>epoch</code></td>
