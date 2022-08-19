@@ -44,7 +44,7 @@ library(torch)
 #        luz_metric_accuracy
 #      )
 #    ) %>%
-#    set_hprams(num_class = 10) %>%
+#    set_hparams(num_class = 10) %>%
 #    set_opt_hparams(lr = 0.003) %>%
 #    fit(train_dl, epochs = 10, valid_data = test_dl)
 
@@ -60,14 +60,14 @@ library(torch)
 #    # -> Training procedure
 #    for (batch in train_dl) {
 #      # -> Calculate model `forward` method.
-#      # -> Calulate the loss
+#      # -> Calculate the loss
 #      # -> Update weights
 #      # -> Update metrics and tracking loss
 #    }
 #    # -> Validation procedure
 #    for (batch in valid_dl) {
 #      # -> Calculate model `forward` method.
-#      # -> Calulate the loss
+#      # -> Calculate the loss
 #      # -> Update metrics and tracking loss
 #    }
 #  }

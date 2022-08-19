@@ -26,8 +26,10 @@ interrupt_callback <- luz_callback_interrupt()
 Other luz_callbacks: 
 \code{\link{luz_callback_csv_logger}()},
 \code{\link{luz_callback_early_stopping}()},
+\code{\link{luz_callback_keep_best_model}()},
 \code{\link{luz_callback_lr_scheduler}()},
 \code{\link{luz_callback_metrics}()},
+\code{\link{luz_callback_mixup}()},
 \code{\link{luz_callback_model_checkpoint}()},
 \code{\link{luz_callback_profile}()},
 \code{\link{luz_callback_progress}()},

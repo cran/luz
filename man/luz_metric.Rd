@@ -33,7 +33,7 @@ superclass. This is captured as an unevaluated expression which is
 evaluated in \code{parent_env} each time an object is instantiated.}
 }
 \value{
-Returns new Luz metric.
+Returns new luz metric.
 }
 \description{
 Creates a new luz metric
@@ -53,13 +53,15 @@ the progress bar, but only called once per epoch to record it’s
 value when the progress bar is not displayed.
 }
 
-Optionally, you can implement a \code{abbrev} field that gives the metric an
+Optionally, you can implement an \code{abbrev} field that gives the metric an
 abbreviation that will be used when displaying metric information in the
 console or tracking record. If no \code{abbrev} is passed, the class name
 will be used.
 
 Let’s take a look at the implementation of \code{luz_metric_accuracy} so you
-can see how to implement a new one:\if{html}{\out{<div class="r">}}\preformatted{luz_metric_accuracy <- luz_metric(
+can see how to implement a new one:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{luz_metric_accuracy <- luz_metric(
   # An abbreviation to be shown in progress bars, or 
   # when printing progress
   abbrev = "Acc", 

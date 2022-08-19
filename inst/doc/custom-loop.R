@@ -21,6 +21,32 @@ knitr::opts_chunk$set(
 #        self$fc1() %>%
 #        nnf_relu() %>%
 #        self$fc2()
+#    }
+#  )
+
+## -----------------------------------------------------------------------------
+#  fitted <- net %>%
+#    setup(
+#      loss = nn_cross_entropy_loss(),
+#      optimizer = optim_adam,
+#      metrics = list(
+#        luz_metric_accuracy
+#      )
+#    ) %>%
+#    fit(train_dl, epochs = 10, valid_data = test_dl)
+
+## -----------------------------------------------------------------------------
+#  net <- nn_module(
+#    "Net",
+#    initialize = function() {
+#      self$fc1 <- nn_linear(100, 50)
+#      self$fc1 <- nn_linear(50, 10)
+#    },
+#    forward = function(x) {
+#      x %>%
+#        self$fc1() %>%
+#        nnf_relu() %>%
+#        self$fc2()
 #    },
 #    set_optimizers = function(lr_fc1 = 0.1, lr_fc2 = 0.01) {
 #      list(
@@ -40,9 +66,7 @@ knitr::opts_chunk$set(
 
 ## -----------------------------------------------------------------------------
 #  fitted <- net %>%
-#    setup(metrics = list(
-#        luz_metric_accuracy
-#    )) %>%
+#    setup(metrics = list(luz_metric_accuracy)) %>%
 #    fit(train_dl, epochs = 10, valid_data = test_dl)
 
 ## -----------------------------------------------------------------------------

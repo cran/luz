@@ -2,7 +2,7 @@
 #' Set's up a `nn_module` to use with luz
 #'
 #' The setup function is used to set important attributes and method for `nn_modules`
-#' to be used with Luz.
+#' to be used with luz.
 #'
 #' It makes sure the module have all the necessary ingredients in order to be fitted.
 #'
@@ -15,6 +15,12 @@
 #' the model parameters.
 #' @param metrics (`list`, optional) A list of metrics to be tracked during
 #' the training procedure.
+#' @param backward (`function`) A functions that takes the loss scalar values as
+#' it's parameter. It must call `$backward()` or [torch::autograd_backward()].
+#' In general you don't need to set this parameter unless you need to customize
+#' how luz calls the `backward()`, for example, if you need to add additional
+#' arguments to the backward call. Note that this becomes a method of the `nn_module`
+#' thus can be used by your custom `step()` if you override it.
 #'
 #' @returns
 #' A luz module that can be trained with [fit()].
@@ -22,7 +28,8 @@
 #' @family training
 #'
 #' @export
-setup <- function(module, loss = NULL, optimizer = NULL, metrics = NULL) {
+setup <- function(module, loss = NULL, optimizer = NULL, metrics = NULL,
+                  backward = NULL) {
 
   methods <- list()
 
@@ -44,6 +51,18 @@ setup <- function(module, loss = NULL, optimizer = NULL, metrics = NULL) {
     rlang::abort(c("No optimizer definition has been provided.",
                    "Use the optimizer argument or,",
                    "Implement the `set_optimizers` method in the `nn_module`."))
+
+
+  if (!is.null(backward)) {
+    if(!rlang::is_function(backward)) {
+      rlang::abort(c("backward should be a function with a single argument"))
+    }
+    methods$backward <- backward
+  } else {
+    methods$backward <- function(x) {
+      x$backward()
+    }
+  }
 
   metrics <- c(luz_metric_loss_average(), metrics)
   methods$metrics <- metrics
@@ -117,51 +136,52 @@ get_opt_hparams <- function(module) {
 #' @param object An `nn_module` that has been [setup()].
 #'
 #' @param data (dataloader, dataset or list) A dataloader created with
-#'   [torch::dataloader()] used for training the model, or a dataset created with
-#'   [torch::dataset()] or a list. Dataloaders and datasets must return list with
-#'   at most 2 items. The first item will be used as input for the module and the
-#'   second will be used as target for the loss function.
+#'   [torch::dataloader()] used for training the model, or a dataset created
+#'   with [torch::dataset()] or a list. Dataloaders and datasets must return a
+#'   list with at most 2 items. The first item will be used as input for the
+#'   module and the second will be used as a target for the loss function.
 #'
-#' @param epochs (int) The maximum number of epochs for training the model.
-#'   If a single value is provided, this is taken to be the `max_epochs` and
-#'   `min_epochs` is set to 0. If a vector of two numbers is provided, the
-#'   first value is `min_epochs` and the second value is `max_epochs`.
-#'   The minimum and maximum number of epochs are included in the context
-#'   object as `ctx$min_epochs` and `ctx$max_epochs`, respectively.
+#' @param epochs (int) The maximum number of epochs for training the model. If a
+#'   single value is provided, this is taken to be the `max_epochs` and
+#'   `min_epochs` is set to 0. If a vector of two numbers is provided, the first
+#'   value is `min_epochs` and the second value is `max_epochs`. The minimum and
+#'   maximum number of epochs are included in the context object as
+#'   `ctx$min_epochs` and `ctx$max_epochs`, respectively.
 #'
 #' @param callbacks (list, optional) A list of callbacks defined with
 #'   [luz_callback()] that will be called during the training procedure. The
 #'   callbacks [luz_callback_metrics()], [luz_callback_progress()] and
 #'   [luz_callback_train_valid()] are always added by default.
 #'
-#' @param valid_data (dataloader, dataset, list or scalar value; optional) A dataloader
-#'   created with [torch::dataloader()] or a dataset created with [torch::dataset()]
-#'   that will be used during the validation procedure. They must return a list with
-#'   (input, target). If `data` is a torch dataset or a list, then you can also supply
-#'   a numeric value between 0 and 1 - and in this case a random sample with size
-#'   orresponding to that proportion from `data` will be used for validation.
+#' @param valid_data (dataloader, dataset, list or scalar value; optional) A
+#'   dataloader created with [torch::dataloader()] or a dataset created with
+#'   [torch::dataset()] that will be used during the validation procedure. They
+#'   must return a list with (input, target). If `data` is a torch dataset or a
+#'   list, then you can also supply a numeric value between 0 and 1 - and in
+#'   this case a random sample with size corresponding to that proportion from
+#'   `data` will be used for validation.
 #'
 #' @param accelerator (accelerator, optional) An optional [accelerator()] object
 #'   used to configure device placement of the components like [nn_module]s,
 #'   optimizers and batches of data.
 #'
 #' @param verbose (logical, optional) An optional boolean value indicating if
-#'   the fitting procedure should emmit output to the console during training.
+#'   the fitting procedure should emit output to the console during training.
 #'   By default, it will produce output if [interactive()] is `TRUE`, otherwise
 #'   it won't print to the console.
 #'
 #' @param ... Currently unused.
 #'
-#' @param dataloader_options Options used when creating a dataloader. See [torch::dataloader()].
-#'  `shuffle=TRUE` by default for the training data and `batch_size=32` by
-#'   default. It will error if not `NULL` and `data` is already a dataloader.
+#' @param dataloader_options Options used when creating a dataloader. See
+#'   [torch::dataloader()]. `shuffle=TRUE` by default for the training data and
+#'   `batch_size=32` by default. It will error if not `NULL` and `data` is
+#'   already a dataloader.
 #'
-#' @returns
-#' A fitted object that can be saved with [luz_save()] and can be printed with
-#' [print()] and plotted with [plot()].
+#' @returns A fitted object that can be saved with [luz_save()] and can be
+#' printed with [print()] and plotted with [plot()].
 #'
-#' @seealso [predict.luz_module_fitted()] for how to create predictions. [setup()]
-#'   to find out how to create modules that can be trained with `fit`.
+#' @seealso [predict.luz_module_fitted()] for how to create predictions.
+#'   [setup()] to find out how to create modules that can be trained with `fit`.
 #'
 #' @family training
 #'
@@ -402,7 +422,7 @@ fit_one_batch <-function(ctx) {
     ctx$call_callbacks("on_train_batch_after_loss")
 
     ctx$call_callbacks("on_train_batch_before_backward")
-    ctx$loss_grad$backward()
+    ctx$model$backward(ctx$loss_grad)
 
     ctx$call_callbacks("on_train_batch_before_step")
     ctx$opt$step()
