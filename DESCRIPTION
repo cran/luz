@@ -1,6 +1,6 @@
 Package: luz
 Title: Higher Level 'API' for 'torch'
-Version: 0.3.0
+Version: 0.3.1
 Authors@R: c(
     person("Daniel", "Falbel", email = "daniel@rstudio.com", role = c("aut", "cre", "cph")),
     person(family = "RStudio", role = c("cph"))
@@ -28,9 +28,9 @@ Collate: 'accelerator.R' 'as_dataloader.R' 'utils.R' 'callbacks.R'
         'module-plot.R' 'module-print.R' 'module.R' 'reexports.R'
         'serialization.R'
 NeedsCompilation: no
-Packaged: 2022-08-19 18:50:00 UTC; dfalbel
+Packaged: 2022-09-05 20:27:39 UTC; dfalbel
 Author: Daniel Falbel [aut, cre, cph],
   RStudio [cph]
 Maintainer: Daniel Falbel <daniel@rstudio.com>
 Repository: CRAN
-Date/Publication: 2022-08-19 21:30:05 UTC
+Date/Publication: 2022-09-06 07:10:02 UTC

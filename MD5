@@ -1,7 +1,7 @@
-02b698ad366b01e09a3f46b574a9a598 *DESCRIPTION
+fd5565aab8ace287034f9ea16f3bec69 *DESCRIPTION
 a343248fbef80b49e30117b786dc8146 *LICENSE
 e2db689e5f9ba1451b23f33dd97f6b60 *NAMESPACE
-8acb7afec8a3eb3ca896efce26ea62a3 *NEWS.md
+808c5a3ab0001a3fc691c57f7cf904e7 *NEWS.md
 7da7c0da609903fdbe1368d4a290f693 *R/accelerator.R
 a1d0546e1c51f84eb643c64feebaeaff *R/as_dataloader.R
 3a831f30c63e7e700e9f11d5cc637d75 *R/callbacks-interrupt.R
@@ -21,7 +21,7 @@ ffa9be88084f7ab667bc8c05ac8a69b9 *R/reexports.R
 f05e1d85e3f0699a77e5e8c26f78db52 *R/serialization.R
 74f13d61f59b13c382a73036d6225480 *R/utils.R
 1ed5f73325086cb41a893c3dede94bac *README.md
-c79be59b26a6b16725570cfc83956311 *build/vignette.rds
+b01bf2c677da78c2aa922d63ceb59a8b *build/vignette.rds
 619535b50ae3ffaf5533549de1bb5a7e *inst/doc/accelerator.R
 9a8ac891c960814153956ddc989f63af *inst/doc/accelerator.Rmd
 ae563e6127786fccd49df2af597b5cc9 *inst/doc/accelerator.html
