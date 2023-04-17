@@ -18,7 +18,9 @@ implement a method called \code{loss}.}
 the model parameters.}
 
 \item{metrics}{(\code{list}, optional) A list of metrics to be tracked during
-the training procedure.}
+the training procedure. Sometimes, you want some metrics to be evaluated
+only during training or validation, in this case you can pass a \code{\link[=luz_metric_set]{luz_metric_set()}}
+object to specify mmetrics used in each stage.}
 
 \item{backward}{(\code{function}) A functions that takes the loss scalar values as
 it's parameter. It must call \verb{$backward()} or \code{\link[torch:autograd_backward]{torch::autograd_backward()}}.
@@ -36,6 +38,13 @@ to be used with luz.
 }
 \details{
 It makes sure the module have all the necessary ingredients in order to be fitted.
+}
+\note{
+It also adds a \code{device} active field that can be used to query the current
+module \code{device} within methods, with eg \code{self$device}. This is useful when
+\code{\link[=ctx]{ctx()}} is not available, eg, when calling methods from outside the \code{luz}
+wrappers. Users can override the default by implementing a \code{device} active
+method in the input \code{module}.
 }
 \seealso{
 Other training: 

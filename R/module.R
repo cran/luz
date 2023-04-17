@@ -14,7 +14,9 @@
 #' `function(parameters, ...)` that is used to initialize an optimizer given
 #' the model parameters.
 #' @param metrics (`list`, optional) A list of metrics to be tracked during
-#' the training procedure.
+#' the training procedure. Sometimes, you want some metrics to be evaluated
+#' only during training or validation, in this case you can pass a [luz_metric_set()]
+#' object to specify mmetrics used in each stage.
 #' @param backward (`function`) A functions that takes the loss scalar values as
 #' it's parameter. It must call `$backward()` or [torch::autograd_backward()].
 #' In general you don't need to set this parameter unless you need to customize
@@ -22,11 +24,19 @@
 #' arguments to the backward call. Note that this becomes a method of the `nn_module`
 #' thus can be used by your custom `step()` if you override it.
 #'
+#' @note
+#' It also adds a `device` active field that can be used to query the current
+#' module `device` within methods, with eg `self$device`. This is useful when
+#' [ctx()] is not available, eg, when calling methods from outside the `luz`
+#' wrappers. Users can override the default by implementing a `device` active
+#' method in the input `module`.
+#'
 #' @returns
 #' A luz module that can be trained with [fit()].
 #'
 #' @family training
 #'
+#' @import torch
 #' @export
 setup <- function(module, loss = NULL, optimizer = NULL, metrics = NULL,
                   backward = NULL) {
@@ -64,8 +74,23 @@ setup <- function(module, loss = NULL, optimizer = NULL, metrics = NULL,
     }
   }
 
-  metrics <- c(luz_metric_loss_average(), metrics)
-  methods$metrics <- metrics
+  methods$metrics <- if (is_luz_metric_set(metrics)) {
+    metrics
+  } else {
+    luz_metric_set(metrics)
+  }
+
+  # adds a device method, allowing users to quickly query the current
+  # model device. this returns the device of the first parameter. should
+  # be OK to do it, as users there's current no support for multi-gpu
+  # training. users can override by implementing their own device method.
+  if (is.null(get_method(module, "device"))) {
+    methods$active <- list(
+      device = function() {
+        self$parameters[[1]]$device
+      }
+    )
+  }
 
   if (!has_forward_method(module))
     methods$forward <- identity
@@ -186,19 +211,23 @@ get_opt_hparams <- function(module) {
 #' @family training
 #'
 #' @importFrom generics fit
+#'
+#' @importFrom coro is_exhausted
+#'
 #' @export
 fit.luz_module_generator <- function(
-  object,
-  data,
-  epochs = 10,
-  callbacks = NULL,
-  valid_data = NULL,
-  accelerator = NULL,
-  verbose = NULL,
-  ...,
-  dataloader_options = NULL
+    object,
+    data,
+    epochs = 10,
+    callbacks = NULL,
+    valid_data = NULL,
+    accelerator = NULL,
+    verbose = NULL,
+    ...,
+    dataloader_options = NULL
 ) {
 
+  enable_mps_fallback()
   module <- object
   ellipsis::check_dots_empty()
 
@@ -226,36 +255,45 @@ fit.luz_module_generator <- function(
   }, add = TRUE)
 
   ctx$call_callbacks("on_fit_begin")
-  rlang::with_handlers(
+  with_handlers(
     !!! ctx$handlers,
     .expr = {
       for (epoch in seq_len(ctx$max_epochs)) {
-        ctx$epoch <- epoch
-        ctx$iter <- 0L
+        with_handlers(
+          !!! ctx$epoch_handlers,
+          .expr = {
 
-        ctx$data <- ctx$train_data
+            ctx$epoch <- epoch
+            ctx$iter <- 0L
 
-        ctx$call_callbacks("on_epoch_begin")
-        ctx$call_callbacks("on_train_begin")
+            ctx$data <- ctx$train_data
 
-        coro::loop(for (batch in ctx$data) {
+            ctx$call_callbacks("on_epoch_begin")
+            ctx$call_callbacks("on_train_begin")
 
-          ctx$batch <- batch
-          ctx$iter <- ctx$iter + 1L
+            # this helps making sure the dataloader workers can be cleaned up
+            # before the validation loop even starts.
+            local({
+              next_batch <- as_iterator(ctx$data)
+              while(!is_exhausted(batch <- next_batch())) {
+                ctx$batch<- batch
+                ctx$iter <- ctx$iter + 1L
 
-          ctx$call_callbacks("on_train_batch_begin")
-          step()
-          ctx$call_callbacks("on_train_batch_end")
-        })
+                ctx$call_callbacks("on_train_batch_begin")
+                step()
+                ctx$call_callbacks("on_train_batch_end")
+              }
+            })
 
-        ctx$call_callbacks("on_train_end")
+            ctx$call_callbacks("on_train_end")
 
-        if (!is.null(ctx$valid_data)) {
-          ctx$data <- ctx$valid_data
-          valid_loop(ctx, step)
-        }
+            if (!is.null(ctx$valid_data)) {
+              ctx$data <- ctx$valid_data
+              valid_loop(ctx, step)
+            }
 
-        ctx$call_callbacks("on_epoch_end")
+            ctx$call_callbacks("on_epoch_end")
+          })
       }
     })
 
@@ -272,20 +310,39 @@ fit.luz_module_generator <- function(
 #'
 #' @param object A fitted model to evaluate.
 #' @inheritParams fit.luz_module_generator
+#' @param metrics A list of luz metrics to be tracked during evaluation. If `NULL`
+#'   (default) then the same metrics that were used during training are tracked.
 #'
 #' @includeRmd man/rmd/evaluate.Rmd details
 #'
 #' @family training
 #' @export
 evaluate <- function(
-  object,
-  data,
-  ...,
-  callbacks = list(),
-  accelerator = NULL,
-  verbose = NULL,
-  dataloader_options = NULL
+    object,
+    data,
+    ...,
+    metrics = NULL,
+    callbacks = list(),
+    accelerator = NULL,
+    verbose = NULL,
+    dataloader_options = NULL
 ) {
+
+  enable_mps_fallback()
+
+  # replace metrics for evaluate. metrics are attributes of luz modules.
+  # after evaluation, metrics are replaced back for their original values.
+  if (!is.null(metrics)) {
+    model_metrics <- object$model$metrics
+    on.exit({
+      object$model$metrics <- model_metrics
+    }, add = TRUE)
+    object$model$metrics <- if (is_luz_metric_set(metrics)) {
+      metrics
+    } else {
+      luz_metric_set(metrics)
+    }
+  }
 
   ctx <- evaluate_context$new(
     model = object$model,
@@ -327,6 +384,7 @@ predict.luz_module_fitted <- function(object, newdata, ..., callbacks = list(),
                                       accelerator = NULL, verbose = NULL,
                                       dataloader_options = NULL) {
 
+  enable_mps_fallback()
   ctx <- predict_context$new(
     model = object$model,
     newdata = newdata,
@@ -352,7 +410,7 @@ predict.luz_module_fitted <- function(object, newdata, ..., callbacks = list(),
 
   torch::with_no_grad({
     ctx$call_callbacks("on_predict_begin")
-    rlang::with_handlers(
+    with_handlers(
       !!! ctx$handlers,
       .expr = {
         coro::loop(for(batch in ctx$data) {
@@ -381,20 +439,22 @@ get_step <- function(ctx) {
 }
 
 valid_loop <- function(ctx, step) {
-
+  torch::local_no_grad() # the whole validation loop has no grad enabled
   ctx$call_callbacks("on_valid_begin")
 
   ctx$iter <- 0L
-  torch::with_no_grad({
-    coro::loop(for (batch in ctx$data) {
-
+  # helps making sure the dataloader workers are quickly deleted after the
+  # evaluation loop
+  local({
+    next_batch <- as_iterator(ctx$data)
+    while(!is_exhausted(batch <- next_batch())) {
       ctx$batch <- batch
       ctx$iter <- ctx$iter + 1L
 
       ctx$call_callbacks("on_valid_batch_begin")
       step()
       ctx$call_callbacks("on_valid_batch_end")
-    })
+    }
   })
 
   ctx$call_callbacks("on_valid_end")
@@ -416,7 +476,7 @@ fit_one_batch <-function(ctx) {
     ctx$opt <- ctx$optimizers[[nm]]
     ctx$opt_name <- nm
 
-    ctx$loss_grad <- ctx$model$loss(ctx$pred, ctx$target)
+    ctx$loss_grad <- ctx$loss_fn(ctx$pred, ctx$target)
     ctx$loss[[ctx$opt_name]] <- ctx$loss_grad$detach()
 
     ctx$call_callbacks("on_train_batch_after_loss")
@@ -438,13 +498,14 @@ valid_one_batch <- function(ctx) {
     ctx$pred <- do.call(ctx$model, list(ctx$input))
     ctx$call_callbacks("on_valid_batch_after_pred")
 
-    ctx$loss[[ctx$opt_name]] <- ctx$model$loss(ctx$pred, ctx$target)
+    ctx$loss[[ctx$opt_name]] <- ctx$loss_fn(ctx$pred, ctx$target)
     ctx$call_callbacks("on_valid_batch_after_loss")
   }
 }
 
 initialize_callbacks <- function(callbacks, ctx) {
   cbs <- lapply(callbacks, function(cb) {
+    assert_is_callback(cb)
     cb$set_ctx(ctx)
     bind_context(cb, ctx)
     cb
@@ -494,6 +555,11 @@ apply_dataloader_options <- function(data, valid_data, dataloader_options) {
     if (is.null(train_dl_options$shuffle))
       train_dl_options$shuffle <- TRUE
 
+    # It's usually better to drop the last batch if its not the same size as the
+    # other as it can have a large effect on results but based on very few obs.
+    if (is.null(train_dl_options$drop_last))
+      train_dl_options$drop_last <- TRUE
+
     data <- rlang::exec(as_dataloader, x = data, !!!train_dl_options)
   }
 
@@ -535,4 +601,28 @@ get_metrics.luz_context <- get_metrics.luz_module_fitted
 get_metrics.luz_module_evaluation <- function(object, ...) {
   res <- get_metrics.luz_module_fitted(object)
   res[, c("metric", "value")]
+}
+
+enable_mps_fallback <- function() {
+  if (!torch::backends_mps_is_available())
+    return(invisible(NULL))
+
+  fallback <- Sys.getenv("PYTORCH_ENABLE_MPS_FALLBACK", unset = "")
+  if (fallback == "") {
+    if (!identical(Sys.getenv("TESTTHAT"), "true")) {
+      cli::cli_warn(c(
+        paste0(
+          "Some torch operators might not yet be implemented for the MPS device. ",
+          "A temporary fix is to set the {.var PYTORCH_ENABLE_MPS_FALLBACK=1} to ",
+          "use the CPU as a fall back for those operators:"),
+        i = paste0(
+          "Add {.var PYTORCH_ENABLE_MPS_FALLBACK=1} to your {.var .Renviron} file, ",
+          "for example use {.fn usethis::edit_r_environ}."),
+        x = paste0(
+          "Using {.var Sys.setenv()} doesn't work because the env var must be ",
+          "set before R starts.")
+      ))
+    }
+  }
+  invisible(NULL)
 }

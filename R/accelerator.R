@@ -84,7 +84,19 @@ LuzAcceleratorState <- R6::R6Class(
   lock_objects = FALSE,
   public = list(
     initialize = function(cpu = FALSE, index = torch::cuda_current_device()) {
-      self$device <- if (torch::cuda_is_available() && !cpu) paste0("cuda:", index) else "cpu"
+      self$device <- private$get_device(cpu, index)
+    }
+  ),
+  private = list(
+    get_device = function(cpu, index) {
+      if (cpu) return("cpu")
+
+      if (torch::cuda_is_available())
+        paste0("cuda:", index)
+      else if (torch::backends_mps_is_available())
+        "mps"
+      else
+        "cpu"
     }
   )
 )
@@ -143,18 +155,18 @@ as_device_dataloader <- function(x, device) {
 #' @export
 as_iterator.device_dataloader <- function(x) {
   g <- NextMethod()
-  gen <- coro::generator(function() {
-    for(batch in g) {
-      coro::yield(to_device(batch, device = x$.device))
-    }
-  })
-  gen()
+  device <- x$.device
+  function() {
+    batch <- g()
+    to_device(batch, device = device)
+  }
 }
 
 to_device <- function(batch, device) {
+  if (!is.list(batch)) return(batch)
   lapply(batch, function(x) {
     if (inherits(x, "torch_tensor"))
-      x$to(device = device)
+      x$to(device = device, non_blocking = TRUE)
     else if (is.list(x))
       to_device(x, device)
     else

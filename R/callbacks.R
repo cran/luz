@@ -17,11 +17,32 @@ LuzCallback <- R6::R6Class(
   )
 )
 
+assert_is_callback <- function(cb) {
+  if (!inherits(cb, "LuzCallback")) {
+    message <- c(
+      x = "Callbacks must have class {.cls LuzCallback} but got {.cls {class(cb)}}")
+    if (rlang::is_function(cb)) {
+      message <- c(
+        message,
+        i = "Perhaps you forgot to initialize the callback?"
+      )
+    }
+    cli::cli_abort(message)
+  }
+  invisible(TRUE)
+}
+
 call_all_callbacks <- function(callbacks, name) {
-  torch::with_no_grad({
-    lapply(callbacks, function(callback) {
-      callback$call(name)
-    })
+  torch::local_no_grad()
+  lapply(callbacks, function(callback) {
+    rlang::try_fetch(
+      callback$call(name),
+      error = function(cnd) {
+        cli::cli_abort(c(
+          "Error while calling callback with class {.cls {class(callback)}} at {.field {name}}."
+        ), parent = cnd)
+      }
+    )
   })
 }
 
@@ -59,6 +80,43 @@ default_evaluate_callbacks <- function() {
 #' @inheritParams R6::R6Class
 #'
 #' @includeRmd man/rmd/callbacks.Rmd details
+#'
+#' @section Prediction callbacks:
+#'
+#' You can also use callbacks when using [predict()]. In this case the supported
+#' callback methods are detailed above.
+#'
+#' ```
+#' Start predict
+#'  - on_predict_begin
+#'  Start prediction loop
+#'   - on_predict_batch_begin
+#'   - on_predict_batch_end
+#'  End prediction loop
+#'  - on_predict_end
+#' End predict
+#' ```
+#'
+#' @section Evaluate callbacks:
+#'
+#' Callbacks can also be used with [evaluate()], in this case, the callbacks that
+#' are used are equivalent to those of the validation loop when using [fit()]:
+#'
+#' ```
+#' Start Valid
+#'  - on_valid_begin
+#'  Start Batch Loop
+#'   - on_valid_batch_begin
+#'   Start Default Validation Step
+#'    - on_valid_batch_after_pred
+#'    - on_valid_batch_after_loss
+#'   End Default Validation Step
+#'   - on_valid_batch_end
+#'  End Batch Loop
+#'  - on_valid_end
+#' End Valid
+#' ```
+#'
 #' @examples
 #' print_callback <- luz_callback(
 #'  name = "print_callback",
@@ -236,30 +294,24 @@ luz_callback_metrics <- luz_callback(
   },
   on_train_begin = function() {
     ctx$metrics$train <- lapply(
-      ctx$model$metrics %||% list(),
+      ctx$model$metrics$train %||% list(),
       self$initialize_metric
     )
   },
   on_train_batch_end = function() {
-    lapply(
-      ctx$metrics$train,
-      function(x) x$update(ctx$pred, ctx$target)
-    )
+    lapply(ctx$metrics$train, self$call_update_on_metric)
   },
   on_train_end = function() {
     self$log_all_metrics("train")
   },
   on_valid_begin = function() {
     ctx$metrics$valid <- lapply(
-      ctx$model$metrics %||% list(),
+      ctx$model$metrics$valid %||% list(),
       self$initialize_metric
     )
   },
   on_valid_batch_end = function() {
-    lapply(
-      ctx$metrics$valid,
-      function(x) x$update(ctx$pred, ctx$target)
-    )
+    lapply(ctx$metrics$valid, self$call_update_on_metric)
   },
   on_valid_end = function() {
     self$log_all_metrics("valid")
@@ -273,9 +325,39 @@ luz_callback_metrics <- luz_callback(
     lapply(
       ctx$metrics[[set]],
       function(x) {
-        ctx$log_metric(tolower(x$abbrev), x$compute())
+        ctx$log_metric(tolower(x$abbrev), self$call_compute_on_metric(x))
       }
     )
+  },
+  call_update_on_metric = function(metric) {
+    rlang::try_fetch({
+      metric$update(ctx$pred, ctx$target)
+    },
+    error = function(cnd) {
+      cli::cli_abort(
+        c(
+          "Error when evaluating {.field update} for metric with abbrev {.val {metric$abbrev}} and class {.cls {class(metric)}}",
+          i = "The error happened at iter {.val {ctx$iter}} of epoch {.val {ctx$epoch}}.",
+          i = "The model was {.emph {ifelse(ctx$training, '', 'not ')}}in training mode."
+        ),
+        parent = cnd
+      )
+    })
+  },
+  call_compute_on_metric = function(metric) {
+    rlang::try_fetch({
+      metric$compute()
+    },
+    error = function(cnd) {
+      cli::cli_abort(
+        c(
+          "Error when evaluating {.field compute} for metric with abbrev {.val {metric$abbrev}} and class {.cls {class(metric)}}",
+          i = "The error happened at iter {.val {ctx$iter}} of epoch {.val {ctx$epoch}}.",
+          i = "The model was {.emph {ifelse(ctx$training, '', 'not ')}}in training mode."
+        ),
+        parent = cnd
+      )
+    })
   }
 )
 

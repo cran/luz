@@ -212,6 +212,15 @@ test_that("valid_data works", {
 
 test_that("we can pass dataloader_options", {
 
+  iter_callback <- luz_callback(
+    initialize = function() {
+      self$iter <- 0
+    },
+    on_train_batch_end = function() {
+      self$iter <- self$iter + 1
+    }
+  )
+
   model <- get_model()
   model <- model %>%
     setup(
@@ -223,15 +232,17 @@ test_that("we can pass dataloader_options", {
 
   x <- list(torch::torch_randn(100,10), torch::torch_randn(100, 1))
 
+  iter <- iter_callback()
   fitted <- model %>% fit(
     x,
     epochs = 1,
     valid_data = 0.1,
     verbose = FALSE,
-    dataloader_options = list(batch_size = 2, shuffle = FALSE)
+    dataloader_options = list(batch_size = 2, shuffle = FALSE),
+    callbacks = iter
   )
 
-  expect_length(fitted$records$profile$train_step, 45)
+  expect_equal(iter$iter, 45)
 
   dl <- get_dl()
   expect_error(regexp = "already a dataloader", {
@@ -327,4 +338,77 @@ test_that("cutom backward", {
       fit(dl, valid_data = dl, verbose = FALSE)
   })
   expect_s3_class(output, "luz_module_fitted")
+})
+
+test_that("luz module has a device arg", {
+
+  mod <- get_model() %>%
+    setup(
+      loss = torch::nn_mse_loss(),
+      optimizer = torch::optim_adam
+    )
+
+  modul <- mod(1,1)
+
+  expect_true(
+    modul$device == torch_device("cpu")
+  )
+
+  mod <- nn_module(
+    initialize = function() {
+      self$par <- torch::nn_parameter(torch_randn(10, 10))
+    },
+    forward = function(x) {
+      self$par
+    },
+    active = list(
+      device = function() {
+        "hello"
+      }
+    )
+  )
+
+  model <- mod %>%
+    setup(
+      loss = torch::nn_mse_loss(),
+      optimizer = torch::optim_adam
+    )
+
+  modul <- mod()
+  expect_equal(modul$device, "hello")
+
+})
+
+test_that("evaluate allows setting metrics for it", {
+
+  model <- get_model()
+  model <- model %>%
+    setup(
+      loss = torch::nn_mse_loss(),
+      optimizer = torch::optim_adam,
+      metrics = list(
+        luz_metric_mae(),
+        luz_metric_mse(),
+        luz_metric_rmse()
+      )
+    ) %>%
+    set_hparams(input_size = 10, output_size = 1) %>%
+    set_opt_hparams(lr = 0.001)
+
+  x <- list(torch::torch_randn(100,10), torch::torch_randn(100, 1))
+
+  fitted <- model %>% fit(
+    x,
+    epochs = 1,
+    verbose = FALSE,
+    dataloader_options = list(batch_size = 2, shuffle = FALSE)
+  )
+
+  e1 <- get_metrics(evaluate(fitted, x))
+  e2 <- get_metrics(evaluate(fitted, x, metrics = list(luz_metric_mae())))
+  e3 <- get_metrics(evaluate(fitted, x))
+
+  expect_equal(e1, e3)
+  expect_equal(e2, e1[e1$metric %in% c("loss", "mae"),])
+
 })

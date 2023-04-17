@@ -30,14 +30,21 @@ has_method <- function(x, name) {
     FALSE
 }
 
+get_method <- function(x, method) {
+  if (!is.null(x$public_methods[[method]]))
+    x$public_methods[[method]]
+  else if (!is.null(x$get_inherit()))
+    get_method(x$get_inherit(), method)
+  else
+    NULL
+}
 
 get_forward <- function(x) {
-  if (!is.null(x$public_methods[["forward"]]))
-    x$public_methods[["forward"]]
-  else if (!is.null(x$get_inherit()))
-    get_forward(x$get_inherit())
-  else
-    rlang::abort("No `forward` method found.")
+  forward <- get_method(x, "forward")
+  if (is.null(forward)) {
+    cli::cli_abort("No method {.val forward} method found.")
+  }
+  forward
 }
 
 has_forward_method <- function(x) {
@@ -48,7 +55,7 @@ has_forward_method <- function(x) {
 }
 
 bind_context <- function(x, ctx) {
-  e <- rlang::fn_env(x$clone) # the `clone` method must always exist in R6 classes
+  e <- x$.__enclos_env__
   rlang::env_bind(e, ctx = ctx)
 
   if (!is.null(x <- x$.__enclos_env__$super))
@@ -80,7 +87,8 @@ inform <- function(message) {
 
 utils::globalVariables(c("super"))
 
-make_class <- function(name, ..., private, active, inherit, parent_env, .init_fun) {
+make_class <- function(name, ..., private, active, inherit, parent_env, .init_fun,
+                       .out_class = NULL) {
   public <- rlang::list2(...)
 
   e <- new.env(parent = parent_env)
@@ -97,9 +105,7 @@ make_class <- function(name, ..., private, active, inherit, parent_env, .init_fu
     lock_objects = FALSE
   )
 
-  e$r6_class <- r6_class
   init <- get_init(r6_class)
-
 
   f <- rlang::new_function(
     args = rlang::fn_fmls(init),
@@ -116,10 +122,14 @@ make_class <- function(name, ..., private, active, inherit, parent_env, .init_fu
         lock_objects = FALSE,
         parent_env = rlang::current_env()
       )
-      if (.init_fun)
-        obj$new()
-      else
-        obj
+      if (.init_fun) {
+        r6_class$new(!!!rlang::fn_fmls_syms(init))
+      } else {
+        if (is.null(.out_class)) stop("Should have an out class.")
+        structure(list(
+          new = function() r6_class$new(!!!rlang::fn_fmls_syms(init))
+        ), class = .out_class)
+      }
     })
   )
   attr(f, "r6_class") <- r6_class
@@ -148,3 +158,16 @@ check_installed <- function (pkg, fun) {
                                        pkg, "')`?")))
 }
 
+map2 <- function(x, y, f) {
+  if (length(x) != length(y)) rlang::abort("Objects must have the same length.")
+  out <- vector(mode = "list", length = length(x))
+  for(i in seq_along(x)) {
+    out[[i]] <- f(x[[i]], y[[i]])
+  }
+  names(out) <- names(x)
+  out
+}
+
+with_handlers <- function(..., .expr) {
+  rlang::try_fetch(.expr, ...)
+}

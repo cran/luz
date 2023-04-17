@@ -33,6 +33,7 @@ NULL
 #'   others.
 #' @param callbacks A list of callbacks used by the model. See [luz_callback()].
 #' @param training A boolean that indicates if the context is in training mode or not.
+#' @param records New set of records to be set.
 #'
 context <- R6::R6Class(
   "luz_context",
@@ -137,6 +138,7 @@ context <- R6::R6Class(
         ".optimizers",
         ".verbose",
         ".handlers",
+        ".epoch_handlers",
         ".metrics",
         ".training",
         ".batch",
@@ -145,6 +147,7 @@ context <- R6::R6Class(
         ".opt",
         ".opt_name",
         ".data",
+        ".loss_fn",
         ".loss",
         ".loss_grad",
         ".epoch"
@@ -173,6 +176,14 @@ context <- R6::R6Class(
       # deleted.
       bind_context(output$model, NULL)
       output
+    },
+    #' @description
+    #' Are you sure you know what you are doing?
+    unsafe_set_records = function(records) {
+      if (!length(private$.records$metrics$train) == 0) {
+        rlang::warn("You are unsafe setting records and it's overriding current data.")
+      }
+      private$.records <- records
     }
   ),
   active = list(
@@ -286,12 +297,19 @@ context <- R6::R6Class(
         return(private$.verbose)
       self$set_verbose(new)
     },
-    #' @field handlers List of error handlers that can be used. See [rlang::with_handlers()]
+    #' @field handlers List of error handlers that can be used. See [rlang::try_fetch()]
     #'   for more info.
     handlers = function(new) {
       if (missing(new))
         return(private$.handlers)
       private$.handlers <- new
+    },
+    #' @field epoch_handlers List of error handlers that can be used. See [rlang::try_fetch()]
+    #'   for more info.
+    epoch_handlers = function(new) {
+      if (missing(new))
+        return(private$.epoch_handlers)
+      private$.epoch_handlers <- new
     },
     #' @field training A bool indicating if the model is in training or validation mode.
     training = function(new){
@@ -314,14 +332,30 @@ context <- R6::R6Class(
     },
     #' @field opt Current optimizer.
     opt = function(new) {
-      if (missing(new))
-        return(private$.opt)
+      if (missing(new)) {
+        if (!is.null(private$.opt)) {
+          return(private$.opt)
+        } else {
+          if (length(self$optimizers) == 1) {
+            return(self$optimizers[[1]])
+          }
+        }
+        cli::cli_abort("{.var ctx$opt} not set.")
+      }
       private$.opt <- new
     },
     #' @field opt_name Current optimizer name.
     opt_name = function(new) {
-      if (missing(new))
-        return(private$.opt_name)
+      if (missing(new)) {
+        if (!is.null(private$.opt_name)) {
+          return(private$.opt_name)
+        } else {
+          if (length(self$optimizers) == 1) {
+            return(names(self$optimizers))
+          }
+        }
+        cli::cli_abort("{.var ctx$opt_name} not set.")
+      }
       private$.opt_name <- new
     },
     #' @field data Current dataloader in use.
@@ -329,6 +363,12 @@ context <- R6::R6Class(
       if (missing(new))
         return(private$.data)
       private$.data <- new
+    },
+    #' @field loss_fn Loss function used to train the model
+    loss_fn = function(new) {
+      if (missing(new))
+        return(private$.loss_fn)
+      private$.loss_fn <- new
     },
     #' @field loss Last computed loss values. Detached from the graph.
     loss = function(new) {
@@ -377,6 +417,7 @@ context <- R6::R6Class(
     .optimizers = NULL,
     .verbose = NULL,
     .handlers = list(),
+    .epoch_handlers = list(),
     .metrics = NULL,
 
     # Fields that are overwritten during model training. They are more or
@@ -389,6 +430,7 @@ context <- R6::R6Class(
     .opt = NULL,
     .opt_name = NULL,
     .data = NULL,
+    .loss_fn = NULL,
     .loss = NULL,
     .loss_grad = NULL,
     .epoch = NULL
@@ -414,6 +456,7 @@ fit_context <- R6::R6Class(
 
       self$model <- do.call(module, self$hparams)
       self$optimizers <- do.call(self$model$set_optimizers, self$opt_hparams)
+      self$loss_fn <- self$model$loss
 
       if (rlang::is_scalar_double(valid_data)) {
         c(data, valid_data) %<-% create_valid_data(data, valid_data)
@@ -479,6 +522,9 @@ evaluate_context <- R6::R6Class(
       self$opt_hparams <- opt_hparams
       # we actually only use the optimizer names ...
       self$optimizers <- do.call(self$model$set_optimizers, self$opt_hparams)
+      # evaluate computes the loss function, and it's better to refer to it from
+      # the context.
+      self$loss_fn <- self$model$loss
     }
   )
 )

@@ -4,10 +4,19 @@
 \alias{luz_callback_mixup}
 \title{Mixup callback}
 \usage{
-luz_callback_mixup(alpha = 0.4)
+luz_callback_mixup(alpha = 0.4, ..., run_valid = FALSE, auto_loss = FALSE)
 }
 \arguments{
 \item{alpha}{parameter for the beta distribution used to sample mixing coefficients}
+
+\item{...}{currently unused. Just to force named arguments.}
+
+\item{run_valid}{Should it run during validation}
+
+\item{auto_loss}{Should it automatically modify the loss function? This will wrap
+the loss function to create the mixup loss. If \code{TRUE} make sure that your loss
+function does not apply reductions. If \code{run_valid=FALSE}, then loss will be
+mean reduced during validation.}
 }
 \value{
 A \code{luz_callback}
@@ -40,6 +49,7 @@ mixup_callback <- luz_callback_mixup()
 \code{\link[=nn_mixup_loss]{nn_mixup_loss()}}, \code{\link[=nnf_mixup]{nnf_mixup()}}
 
 Other luz_callbacks: 
+\code{\link{luz_callback_auto_resume}()},
 \code{\link{luz_callback_csv_logger}()},
 \code{\link{luz_callback_early_stopping}()},
 \code{\link{luz_callback_interrupt}()},
@@ -49,6 +59,7 @@ Other luz_callbacks:
 \code{\link{luz_callback_model_checkpoint}()},
 \code{\link{luz_callback_profile}()},
 \code{\link{luz_callback_progress}()},
+\code{\link{luz_callback_resume_from_checkpoint}()},
 \code{\link{luz_callback_train_valid}()},
 \code{\link{luz_callback}()}
 }
