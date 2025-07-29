@@ -121,7 +121,7 @@ callback \emph{breakpoints}:
 End Fit
 }\if{html}{\out{</div>}}
 
-Every step market with \verb{on_*} is a point in the training procedure that
+Every step marked with \verb{on_*} is a point in the training procedure that
 is available for callbacks to be called.
 
 The other important part of callbacks is the \code{ctx} (context) object. See
@@ -141,7 +141,7 @@ we want to run it as the last thing in the loop.
 
 
 You can also use callbacks when using \code{\link[=predict]{predict()}}. In this case the supported
-callback methods are detailed above.
+callback methods are detailed below:
 
 \if{html}{\out{<div class="sourceCode">}}\preformatted{Start predict
  - on_predict_begin
@@ -195,6 +195,7 @@ Other luz_callbacks:
 \code{\link{luz_callback_keep_best_model}()},
 \code{\link{luz_callback_lr_scheduler}()},
 \code{\link{luz_callback_metrics}()},
+\code{\link{luz_callback_mixed_precision}()},
 \code{\link{luz_callback_mixup}()},
 \code{\link{luz_callback_model_checkpoint}()},
 \code{\link{luz_callback_profile}()},

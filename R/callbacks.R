@@ -84,7 +84,7 @@ default_evaluate_callbacks <- function() {
 #' @section Prediction callbacks:
 #'
 #' You can also use callbacks when using [predict()]. In this case the supported
-#' callback methods are detailed above.
+#' callback methods are detailed below:
 #'
 #' ```
 #' Start predict
@@ -227,12 +227,22 @@ luz_callback_progress <- luz_callback(
     }
   },
   initialize_progress_bar = function(split) {
-    format <- ":current/:total [:bar]"
+    total <- length(ctx$data) # ctx$data is the current dataset - can be the validation or training.
+
+    if (!is.na(total)) {
+      format <- ":current/:total [:bar]"
+    } else {
+      format <- ":current/unk [:spin]"
+    }
 
     # Specially for testing purposes we don't want to have the
     # progress bar showing the ETA.
     if (getOption("luz.show_progress_bar_eta", TRUE)) {
-      format <- paste0(format,  " - ETA: :eta")
+      if (!is.na(total)) {
+        format <- paste0(format, " - ETA: :eta")
+      } else {
+        format <- paste0(format, " - Rate: :tick_rate iter/s")
+      }
     }
 
     metrics <- ctx$metrics[[split]]
@@ -246,7 +256,6 @@ luz_callback_progress <- luz_callback(
     show_after <- if (getOption("luz.force_progress_bar", FALSE)) 0 else 0.2
 
     format <- paste0(c(format, abbrevs), collapse = " - ")
-    total <- length(ctx$data) # ctx$data is the current dataset - can be the validation or training.
 
     self$pb <- progress::progress_bar$new(
       force = getOption("luz.force_progress_bar", FALSE),
@@ -373,7 +382,7 @@ luz_callback_metrics <- luz_callback(
 #' - `ctx$loss`: Resets the `loss` attribute to `list()` when finished training/ or
 #'   validating.
 #'
-#' @note In general you won't need to explicitly use the metrics callback as it's
+#' @note In general you won't need to explicitly use the train_valid callback as it's
 #' used by default in [fit.luz_module_generator()].
 #'
 #' @returns
@@ -426,7 +435,12 @@ luz_callback_lr_scheduler <- luz_callback(
       lr_scheduler(optimizer, ...)
     }
     self[[call_on]] <- function() {
-      self$scheduler$step()
+      if ("metrics" %in% names(formals(self$scheduler$step))) {
+        current_loss <- ctx$loss[[self$opt_name]]
+        self$scheduler$step(current_loss)
+      } else {
+        self$scheduler$step()
+      }
     }
     self$opt_name <- opt_name
   },
@@ -441,12 +455,18 @@ luz_callback_lr_scheduler <- luz_callback(
       rlang::abort(glue::glue("opt_name '{self$opt_name}' not found in ctx$optimizers."))
 
     self$scheduler <- self$lr_scheduler_fn(ctx$optimizers[[self$opt_name]])
+  },
+  state_dict = function() {
+    self$scheduler$state_dict()
+  },
+  load_state_dict = function(state_dict) {
+    self$scheduler$load_state_dict(state_dict)
   }
 )
 
 #' CSV logger callback
 #'
-#' Logs metrics obtained during training a fiel on disk.
+#' Logs metrics obtained during training a file on disk.
 #' The file will have 1 line for each epoch/validation.
 #'
 #' @param path path to a file on disk.

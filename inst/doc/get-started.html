@@ -48,6 +48,7 @@ overflow: visible;
 }
 </style>
 <style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
 pre > code.sourceCode { white-space: pre; position: relative; }
 pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
@@ -340,8 +341,8 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 
 
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(luz)</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(torch)</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(luz)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">library</span>(torch)</span></code></pre></div>
 <p>Luz is a high-level API for torch that aims to encapsulate the
 <strong>training loop</strong> into a set of reusable pieces of code.
 Luz reduces the boilerplate code required to train a model with torch
@@ -377,45 +378,45 @@ torch. A model in luz is defined identically as you would define it if
 using raw torch. For a specific example, this is the definition of a
 feed-forward CNN that can be used to classify digits from the MNIST
 dataset:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>net <span class="ot">&lt;-</span> <span class="fu">nn_module</span>(</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Net&quot;</span>,</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">initialize =</span> <span class="cf">function</span>(num_class) {</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    self<span class="sc">$</span>conv1 <span class="ot">&lt;-</span> <span class="fu">nn_conv2d</span>(<span class="dv">1</span>, <span class="dv">32</span>, <span class="dv">3</span>, <span class="dv">1</span>)</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    self<span class="sc">$</span>conv2 <span class="ot">&lt;-</span> <span class="fu">nn_conv2d</span>(<span class="dv">32</span>, <span class="dv">64</span>, <span class="dv">3</span>, <span class="dv">1</span>)</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    self<span class="sc">$</span>dropout1 <span class="ot">&lt;-</span> <span class="fu">nn_dropout2d</span>(<span class="fl">0.25</span>)</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    self<span class="sc">$</span>dropout2 <span class="ot">&lt;-</span> <span class="fu">nn_dropout2d</span>(<span class="fl">0.5</span>)</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    self<span class="sc">$</span>fc1 <span class="ot">&lt;-</span> <span class="fu">nn_linear</span>(<span class="dv">9216</span>, <span class="dv">128</span>)</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    self<span class="sc">$</span>fc2 <span class="ot">&lt;-</span> <span class="fu">nn_linear</span>(<span class="dv">128</span>, num_class)</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  },</span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">forward =</span> <span class="cf">function</span>(x) {</span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    x <span class="ot">&lt;-</span> self<span class="sc">$</span><span class="fu">conv1</span>(x)</span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    x <span class="ot">&lt;-</span> <span class="fu">nnf_relu</span>(x)</span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    x <span class="ot">&lt;-</span> self<span class="sc">$</span><span class="fu">conv2</span>(x)</span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    x <span class="ot">&lt;-</span> <span class="fu">nnf_relu</span>(x)</span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    x <span class="ot">&lt;-</span> <span class="fu">nnf_max_pool2d</span>(x, <span class="dv">2</span>)</span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    x <span class="ot">&lt;-</span> self<span class="sc">$</span><span class="fu">dropout1</span>(x)</span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    x <span class="ot">&lt;-</span> <span class="fu">torch_flatten</span>(x, <span class="at">start_dim =</span> <span class="dv">2</span>)</span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    x <span class="ot">&lt;-</span> self<span class="sc">$</span><span class="fu">fc1</span>(x)</span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    x <span class="ot">&lt;-</span> <span class="fu">nnf_relu</span>(x)</span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    x <span class="ot">&lt;-</span> self<span class="sc">$</span><span class="fu">dropout2</span>(x)</span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    x <span class="ot">&lt;-</span> self<span class="sc">$</span><span class="fu">fc2</span>(x)</span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>    x</span>
-<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>net <span class="ot">&lt;-</span> <span class="fu">nn_module</span>(</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>  <span class="st">&quot;Net&quot;</span>,</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>  <span class="at">initialize =</span> <span class="cf">function</span>(num_class) {</span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>    self<span class="sc">$</span>conv1 <span class="ot">&lt;-</span> <span class="fu">nn_conv2d</span>(<span class="dv">1</span>, <span class="dv">32</span>, <span class="dv">3</span>, <span class="dv">1</span>)</span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>    self<span class="sc">$</span>conv2 <span class="ot">&lt;-</span> <span class="fu">nn_conv2d</span>(<span class="dv">32</span>, <span class="dv">64</span>, <span class="dv">3</span>, <span class="dv">1</span>)</span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>    self<span class="sc">$</span>dropout1 <span class="ot">&lt;-</span> <span class="fu">nn_dropout2d</span>(<span class="fl">0.25</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>    self<span class="sc">$</span>dropout2 <span class="ot">&lt;-</span> <span class="fu">nn_dropout2d</span>(<span class="fl">0.5</span>)</span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>    self<span class="sc">$</span>fc1 <span class="ot">&lt;-</span> <span class="fu">nn_linear</span>(<span class="dv">9216</span>, <span class="dv">128</span>)</span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>    self<span class="sc">$</span>fc2 <span class="ot">&lt;-</span> <span class="fu">nn_linear</span>(<span class="dv">128</span>, num_class)</span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>  },</span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>  <span class="at">forward =</span> <span class="cf">function</span>(x) {</span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>    x <span class="ot">&lt;-</span> self<span class="sc">$</span><span class="fu">conv1</span>(x)</span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a>    x <span class="ot">&lt;-</span> <span class="fu">nnf_relu</span>(x)</span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a>    x <span class="ot">&lt;-</span> self<span class="sc">$</span><span class="fu">conv2</span>(x)</span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a>    x <span class="ot">&lt;-</span> <span class="fu">nnf_relu</span>(x)</span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a>    x <span class="ot">&lt;-</span> <span class="fu">nnf_max_pool2d</span>(x, <span class="dv">2</span>)</span>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a>    x <span class="ot">&lt;-</span> self<span class="sc">$</span><span class="fu">dropout1</span>(x)</span>
+<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a>    x <span class="ot">&lt;-</span> <span class="fu">torch_flatten</span>(x, <span class="at">start_dim =</span> <span class="dv">2</span>)</span>
+<span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a>    x <span class="ot">&lt;-</span> self<span class="sc">$</span><span class="fu">fc1</span>(x)</span>
+<span id="cb2-20"><a href="#cb2-20" tabindex="-1"></a>    x <span class="ot">&lt;-</span> <span class="fu">nnf_relu</span>(x)</span>
+<span id="cb2-21"><a href="#cb2-21" tabindex="-1"></a>    x <span class="ot">&lt;-</span> self<span class="sc">$</span><span class="fu">dropout2</span>(x)</span>
+<span id="cb2-22"><a href="#cb2-22" tabindex="-1"></a>    x <span class="ot">&lt;-</span> self<span class="sc">$</span><span class="fu">fc2</span>(x)</span>
+<span id="cb2-23"><a href="#cb2-23" tabindex="-1"></a>    x</span>
+<span id="cb2-24"><a href="#cb2-24" tabindex="-1"></a>  }</span>
+<span id="cb2-25"><a href="#cb2-25" tabindex="-1"></a>)</span></code></pre></div>
 <p>We can now train this model in the <code>train_dl</code> and validate
 it in the <code>test_dl</code> <code>torch::dataloaders()</code>
 with:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>fitted <span class="ot">&lt;-</span> net <span class="sc">%&gt;%</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">setup</span>(</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">loss =</span> <span class="fu">nn_cross_entropy_loss</span>(),</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">optimizer =</span> optim_adam,</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">metrics =</span> <span class="fu">list</span>(</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>      luz_metric_accuracy</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_hparams</span>(<span class="at">num_class =</span> <span class="dv">10</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_opt_hparams</span>(<span class="at">lr =</span> <span class="fl">0.003</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit</span>(train_dl, <span class="at">epochs =</span> <span class="dv">10</span>, <span class="at">valid_data =</span> test_dl)</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>fitted <span class="ot">&lt;-</span> net <span class="sc">%&gt;%</span></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>  <span class="fu">setup</span>(</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>    <span class="at">loss =</span> <span class="fu">nn_cross_entropy_loss</span>(),</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>    <span class="at">optimizer =</span> optim_adam,</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>    <span class="at">metrics =</span> <span class="fu">list</span>(</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>      luz_metric_accuracy</span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>    )</span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>  <span class="fu">set_hparams</span>(<span class="at">num_class =</span> <span class="dv">10</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>  <span class="fu">set_opt_hparams</span>(<span class="at">lr =</span> <span class="fl">0.003</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>  <span class="fu">fit</span>(train_dl, <span class="at">epochs =</span> <span class="dv">10</span>, <span class="at">valid_data =</span> test_dl)</span></code></pre></div>
 <p>Let’s understand what happens in this chunk of code:</p>
 <ol style="list-style-type: decimal">
 <li>The <code>setup</code> function allows you to configure the loss
@@ -453,7 +454,7 @@ selected device so you don’t need to handle it manually (which is in
 general very error prone).</p>
 <p>To create predictions from the trained model you can use the
 <code>predict</code> method:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>predictions <span class="ot">&lt;-</span> <span class="fu">predict</span>(fitted, test_dl)</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>predictions <span class="ot">&lt;-</span> <span class="fu">predict</span>(fitted, test_dl)</span></code></pre></div>
 </div>
 <div id="the-training-loop" class="section level2">
 <h2>The training loop</h2>
@@ -461,26 +462,26 @@ general very error prone).</p>
 function and now it’s important to have an overview of what’s happening
 inside it. In pseudocode, here’s what <code>fit</code> does. This is not
 fully detailed but should help you to build your intuition:</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># -&gt; Initialize objects: model, optimizers.</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co"># -&gt; Select fitting device.</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># -&gt; Move data, model, optimizers to the selected device.</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># -&gt; Start training</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (epoch <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>epochs) {</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="co"># -&gt; Training procedure</span></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (batch <span class="cf">in</span> train_dl) {</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="co"># -&gt; Calculate model `forward` method.</span></span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="co"># -&gt; Calculate the loss</span></span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="co"># -&gt; Update weights</span></span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="co"># -&gt; Update metrics and tracking loss</span></span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  <span class="co"># -&gt; Validation procedure</span></span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (batch <span class="cf">in</span> valid_dl) {</span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    <span class="co"># -&gt; Calculate model `forward` method.</span></span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    <span class="co"># -&gt; Calculate the loss</span></span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    <span class="co"># -&gt; Update metrics and tracking loss</span></span>
-<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a><span class="co"># -&gt; End training</span></span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># -&gt; Initialize objects: model, optimizers.</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="co"># -&gt; Select fitting device.</span></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co"># -&gt; Move data, model, optimizers to the selected device.</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co"># -&gt; Start training</span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="cf">for</span> (epoch <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>epochs) {</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>  <span class="co"># -&gt; Training procedure</span></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>  <span class="cf">for</span> (batch <span class="cf">in</span> train_dl) {</span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a>    <span class="co"># -&gt; Calculate model `forward` method.</span></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>    <span class="co"># -&gt; Calculate the loss</span></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a>    <span class="co"># -&gt; Update weights</span></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a>    <span class="co"># -&gt; Update metrics and tracking loss</span></span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a>  }</span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a>  <span class="co"># -&gt; Validation procedure</span></span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a>  <span class="cf">for</span> (batch <span class="cf">in</span> valid_dl) {</span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a>    <span class="co"># -&gt; Calculate model `forward` method.</span></span>
+<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a>    <span class="co"># -&gt; Calculate the loss</span></span>
+<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a>    <span class="co"># -&gt; Update metrics and tracking loss</span></span>
+<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a>  }</span>
+<span id="cb5-19"><a href="#cb5-19" tabindex="-1"></a>}</span>
+<span id="cb5-20"><a href="#cb5-20" tabindex="-1"></a><span class="co"># -&gt; End training</span></span></code></pre></div>
 </div>
 <div id="metrics" class="section level2">
 <h2>Metrics</h2>
@@ -489,14 +490,14 @@ choosing the evaluation metric. Luz allows tracking many different
 metrics during training with minimal code changes.</p>
 <p>In order to track metrics, you only need to modify the
 <code>metrics</code> parameter in the <code>setup</code> function:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>fitted <span class="ot">&lt;-</span> net <span class="sc">%&gt;%</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">setup</span>(</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    ...</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">metrics =</span> <span class="fu">list</span>(</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>      luz_metric_accuracy</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit</span>(...)</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>fitted <span class="ot">&lt;-</span> net <span class="sc">%&gt;%</span></span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>  <span class="fu">setup</span>(</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>    ...</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>    <span class="at">metrics =</span> <span class="fu">list</span>(</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>      luz_metric_accuracy</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>    )</span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>  <span class="fu">fit</span>(...)</span></code></pre></div>
 <p>Luz provides implementations of a few of the most used metrics. If a
 metric is not available you can always implement a new one using the
 <code>luz_metric</code> function.</p>
@@ -523,32 +524,32 @@ is passed, the class name will be used.</p>
 <p>Let’s take a look at the implementation of
 <code>luz_metric_accuracy</code> so you can see how to implement a new
 one:</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>luz_metric_accuracy <span class="ot">&lt;-</span> <span class="fu">luz_metric</span>(</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># An abbreviation to be shown in progress bars, or </span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="co"># when printing progress</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">abbrev =</span> <span class="st">&quot;Acc&quot;</span>, </span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Initial setup for the metric. Metrics are initialized</span></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="co"># every epoch, for both training and validation</span></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">initialize =</span> <span class="cf">function</span>() {</span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    self<span class="sc">$</span>correct <span class="ot">&lt;-</span> <span class="dv">0</span></span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    self<span class="sc">$</span>total <span class="ot">&lt;-</span> <span class="dv">0</span></span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  },</span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Run at every training or validation step and updates</span></span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  <span class="co"># the internal state. The update function takes `preds`</span></span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  <span class="co"># and `target` as parameters.</span></span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">update =</span> <span class="cf">function</span>(preds, target) {</span>
-<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>    pred <span class="ot">&lt;-</span> torch<span class="sc">::</span><span class="fu">torch_argmax</span>(preds, <span class="at">dim =</span> <span class="dv">2</span>)</span>
-<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>    self<span class="sc">$</span>correct <span class="ot">&lt;-</span> self<span class="sc">$</span>correct <span class="sc">+</span> (pred <span class="sc">==</span> target)<span class="sc">$</span></span>
-<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>      <span class="fu">to</span>(<span class="at">dtype =</span> torch<span class="sc">::</span><span class="fu">torch_float</span>())<span class="sc">$</span></span>
-<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>      <span class="fu">sum</span>()<span class="sc">$</span></span>
-<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>      <span class="fu">item</span>()</span>
-<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    self<span class="sc">$</span>total <span class="ot">&lt;-</span> self<span class="sc">$</span>total <span class="sc">+</span> pred<span class="sc">$</span><span class="fu">numel</span>()</span>
-<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>  },</span>
-<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Use the internal state to query the metric value</span></span>
-<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>  <span class="at">compute =</span> <span class="cf">function</span>() {</span>
-<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>    self<span class="sc">$</span>correct<span class="sc">/</span>self<span class="sc">$</span>total</span>
-<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>luz_metric_accuracy <span class="ot">&lt;-</span> <span class="fu">luz_metric</span>(</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>  <span class="co"># An abbreviation to be shown in progress bars, or </span></span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>  <span class="co"># when printing progress</span></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>  <span class="at">abbrev =</span> <span class="st">&quot;Acc&quot;</span>, </span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>  <span class="co"># Initial setup for the metric. Metrics are initialized</span></span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>  <span class="co"># every epoch, for both training and validation</span></span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>  <span class="at">initialize =</span> <span class="cf">function</span>() {</span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a>    self<span class="sc">$</span>correct <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a>    self<span class="sc">$</span>total <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a>  },</span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a>  <span class="co"># Run at every training or validation step and updates</span></span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a>  <span class="co"># the internal state. The update function takes `preds`</span></span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a>  <span class="co"># and `target` as parameters.</span></span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a>  <span class="at">update =</span> <span class="cf">function</span>(preds, target) {</span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a>    pred <span class="ot">&lt;-</span> torch<span class="sc">::</span><span class="fu">torch_argmax</span>(preds, <span class="at">dim =</span> <span class="dv">2</span>)</span>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a>    self<span class="sc">$</span>correct <span class="ot">&lt;-</span> self<span class="sc">$</span>correct <span class="sc">+</span> (pred <span class="sc">==</span> target)<span class="sc">$</span></span>
+<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a>      <span class="fu">to</span>(<span class="at">dtype =</span> torch<span class="sc">::</span><span class="fu">torch_float</span>())<span class="sc">$</span></span>
+<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a>      <span class="fu">sum</span>()<span class="sc">$</span></span>
+<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a>      <span class="fu">item</span>()</span>
+<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a>    self<span class="sc">$</span>total <span class="ot">&lt;-</span> self<span class="sc">$</span>total <span class="sc">+</span> pred<span class="sc">$</span><span class="fu">numel</span>()</span>
+<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a>  },</span>
+<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a>  <span class="co"># Use the internal state to query the metric value</span></span>
+<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a>  <span class="at">compute =</span> <span class="cf">function</span>() {</span>
+<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a>    self<span class="sc">$</span>correct<span class="sc">/</span>self<span class="sc">$</span>total</span>
+<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a>  }</span>
+<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a>)</span></code></pre></div>
 <p><strong>Note</strong>: It’s good practice that the
 <code>compute</code> metric returns regular R values instead of torch
 tensors and other parts of luz will expect that.</p>
@@ -563,15 +564,9 @@ and computes the metrics attached to the model.</p>
 can query for metrics using the <code>get_metrics</code> function or
 simply <code>print</code> to see the results.</p>
 <p>For example:</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>evaluation <span class="ot">&lt;-</span> fitted <span class="sc">%&gt;%</span> <span class="fu">evaluate</span>(<span class="at">data =</span> valid_dl)</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>metrics <span class="ot">&lt;-</span> <span class="fu">get_metrics</span>(evaluation)</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(evaluation)</span></code></pre></div>
-<pre><code>#&gt; A `luz_module_evaluation`
-#&gt; -- Results ---------------------------------------------------------------------
-#&gt; loss: 1.8892
-#&gt; mae: 1.0522
-#&gt; mse: 1.645
-#&gt; rmse: 1.2826</code></pre>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>evaluation <span class="ot">&lt;-</span> fitted <span class="sc">%&gt;%</span> <span class="fu">evaluate</span>(<span class="at">data =</span> valid_dl)</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>metrics <span class="ot">&lt;-</span> <span class="fu">get_metrics</span>(evaluation)</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a><span class="fu">print</span>(evaluation)</span></code></pre></div>
 </div>
 <div id="customizing-with-callbacks" class="section level2">
 <h2>Customizing with callbacks</h2>
@@ -601,18 +596,18 @@ specifically for your training procedure. For example:</p>
 (where <code>n</code> is the iteration number) for every batch in the
 training set and ‘Done’ when an epoch is finished. For that task we use
 the <code>luz_callback</code> function:</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>print_callback <span class="ot">&lt;-</span> <span class="fu">luz_callback</span>(</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">name =</span> <span class="st">&quot;print_callback&quot;</span>,</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">initialize =</span> <span class="cf">function</span>(message) {</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    self<span class="sc">$</span>message <span class="ot">&lt;-</span> message</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  },</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">on_train_batch_end =</span> <span class="cf">function</span>() {</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">cat</span>(<span class="st">&quot;Iteration &quot;</span>, ctx<span class="sc">$</span>iter, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  },</span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">on_epoch_end =</span> <span class="cf">function</span>() {</span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">cat</span>(self<span class="sc">$</span>message, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>print_callback <span class="ot">&lt;-</span> <span class="fu">luz_callback</span>(</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>  <span class="at">name =</span> <span class="st">&quot;print_callback&quot;</span>,</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>  <span class="at">initialize =</span> <span class="cf">function</span>(message) {</span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>    self<span class="sc">$</span>message <span class="ot">&lt;-</span> message</span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>  },</span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a>  <span class="at">on_train_batch_end =</span> <span class="cf">function</span>() {</span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a>    <span class="fu">cat</span>(<span class="st">&quot;Iteration &quot;</span>, ctx<span class="sc">$</span>iter, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a>  },</span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a>  <span class="at">on_epoch_end =</span> <span class="cf">function</span>() {</span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a>    <span class="fu">cat</span>(self<span class="sc">$</span>message, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a>  }</span>
+<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a>)</span></code></pre></div>
 <p><code>luz_callback()</code> takes named functions as <code>...</code>
 arguments, where the name indicates the moment at which the callback
 should be called. For instance <code>on_train_batch_end()</code> is
@@ -628,11 +623,11 @@ a <code>message</code> parameter that is printed at the end of each
 epoch.</p>
 <p>Once a callback is defined it can be passed to the <code>fit</code>
 function via the <code>callbacks</code> parameter:</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>fitted <span class="ot">&lt;-</span> net <span class="sc">%&gt;%</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">setup</span>(...) <span class="sc">%&gt;%</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit</span>(..., <span class="at">callbacks =</span> <span class="fu">list</span>(</span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">print_callback</span>(<span class="at">message =</span> <span class="st">&quot;Done!&quot;</span>)</span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  ))</span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>fitted <span class="ot">&lt;-</span> net <span class="sc">%&gt;%</span></span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>  <span class="fu">setup</span>(...) <span class="sc">%&gt;%</span></span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>  <span class="fu">fit</span>(..., <span class="at">callbacks =</span> <span class="fu">list</span>(</span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>    <span class="fu">print_callback</span>(<span class="at">message =</span> <span class="st">&quot;Done!&quot;</span>)</span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a>  ))</span></code></pre></div>
 <p>Callbacks can be called in many different positions of the training
 loop, including combinations of them. Here’s an overview of possible
 callback <em>breakpoints</em>:</p>
@@ -671,7 +666,7 @@ callback <em>breakpoints</em>:</p>
   End Epoch Loop
    - on_fit_end
 End Fit</code></pre>
-<p>Every step market with <code>on_*</code> is a point in the training
+<p>Every step marked with <code>on_*</code> is a point in the training
 procedure that is available for callbacks to be called.</p>
 <p>The other important part of callbacks is the <code>ctx</code>
 (context) object. See <code>help(&quot;ctx&quot;)</code> for details.</p>

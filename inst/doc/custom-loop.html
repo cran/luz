@@ -48,6 +48,7 @@ overflow: visible;
 }
 </style>
 <style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
 pre > code.sourceCode { white-space: pre; position: relative; }
 pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
@@ -340,8 +341,8 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 
 
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(torch)</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(luz)</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(torch)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">library</span>(luz)</span></code></pre></div>
 <p>Luz is a higher level API for torch that is designed to be highly
 flexible by providing a layered API that allows it to be useful no
 matter the level of control your need for your training loop.</p>
@@ -372,29 +373,29 @@ placement of the dataloaders, optimizers and models. See
 </ul>
 <p>Let’s consider a simplified version of the <code>net</code> that we
 implemented in the getting started vignette:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>net <span class="ot">&lt;-</span> <span class="fu">nn_module</span>(</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Net&quot;</span>,</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">initialize =</span> <span class="cf">function</span>() {</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    self<span class="sc">$</span>fc1 <span class="ot">&lt;-</span> <span class="fu">nn_linear</span>(<span class="dv">100</span>, <span class="dv">50</span>)</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    self<span class="sc">$</span>fc1 <span class="ot">&lt;-</span> <span class="fu">nn_linear</span>(<span class="dv">50</span>, <span class="dv">10</span>)</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  },</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">forward =</span> <span class="cf">function</span>(x) {</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    x <span class="sc">%&gt;%</span> </span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>      self<span class="sc">$</span><span class="fu">fc1</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>      <span class="fu">nnf_relu</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>      self<span class="sc">$</span><span class="fu">fc2</span>()</span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>net <span class="ot">&lt;-</span> <span class="fu">nn_module</span>(</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>  <span class="st">&quot;Net&quot;</span>,</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>  <span class="at">initialize =</span> <span class="cf">function</span>() {</span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>    self<span class="sc">$</span>fc1 <span class="ot">&lt;-</span> <span class="fu">nn_linear</span>(<span class="dv">100</span>, <span class="dv">50</span>)</span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>    self<span class="sc">$</span>fc1 <span class="ot">&lt;-</span> <span class="fu">nn_linear</span>(<span class="dv">50</span>, <span class="dv">10</span>)</span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>  },</span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>  <span class="at">forward =</span> <span class="cf">function</span>(x) {</span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>    x <span class="sc">%&gt;%</span> </span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>      self<span class="sc">$</span><span class="fu">fc1</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>      <span class="fu">nnf_relu</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>      self<span class="sc">$</span><span class="fu">fc2</span>()</span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>  }</span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a>)</span></code></pre></div>
 <p>Using the highest level of luz API we would fit it using:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>fitted <span class="ot">&lt;-</span> net <span class="sc">%&gt;%</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">setup</span>(</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">loss =</span> <span class="fu">nn_cross_entropy_loss</span>(),</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">optimizer =</span> optim_adam,</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">metrics =</span> <span class="fu">list</span>(</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>      luz_metric_accuracy</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit</span>(train_dl, <span class="at">epochs =</span> <span class="dv">10</span>, <span class="at">valid_data =</span> test_dl)</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>fitted <span class="ot">&lt;-</span> net <span class="sc">%&gt;%</span></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>  <span class="fu">setup</span>(</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>    <span class="at">loss =</span> <span class="fu">nn_cross_entropy_loss</span>(),</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>    <span class="at">optimizer =</span> optim_adam,</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>    <span class="at">metrics =</span> <span class="fu">list</span>(</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>      luz_metric_accuracy</span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>    )</span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>  <span class="fu">fit</span>(train_dl, <span class="at">epochs =</span> <span class="dv">10</span>, <span class="at">valid_data =</span> test_dl)</span></code></pre></div>
 <div id="multiple-optimizers" class="section level2">
 <h2>Multiple optimizers</h2>
 <p>Suppose we want to do an experiment where we train the first fully
@@ -411,33 +412,33 @@ depending on the <code>ctx</code>.</p></li>
 optimizer.</p></li>
 </ul>
 <p>Let’s go to the code:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>net <span class="ot">&lt;-</span> <span class="fu">nn_module</span>(</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Net&quot;</span>,</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">initialize =</span> <span class="cf">function</span>() {</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    self<span class="sc">$</span>fc1 <span class="ot">&lt;-</span> <span class="fu">nn_linear</span>(<span class="dv">100</span>, <span class="dv">50</span>)</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    self<span class="sc">$</span>fc1 <span class="ot">&lt;-</span> <span class="fu">nn_linear</span>(<span class="dv">50</span>, <span class="dv">10</span>)</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  },</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">forward =</span> <span class="cf">function</span>(x) {</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    x <span class="sc">%&gt;%</span> </span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>      self<span class="sc">$</span><span class="fu">fc1</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>      <span class="fu">nnf_relu</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>      self<span class="sc">$</span><span class="fu">fc2</span>()</span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  },</span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">set_optimizers =</span> <span class="cf">function</span>(<span class="at">lr_fc1 =</span> <span class="fl">0.1</span>, <span class="at">lr_fc2 =</span> <span class="fl">0.01</span>) {</span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">list</span>(</span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>      <span class="at">opt_fc1 =</span> <span class="fu">optim_adam</span>(self<span class="sc">$</span>fc1<span class="sc">$</span>parameters, <span class="at">lr =</span> lr_fc1),</span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">opt_fc2 =</span> <span class="fu">optim_adam</span>(self<span class="sc">$</span>fc2<span class="sc">$</span>parameters, <span class="at">lr =</span> lr_fc2)</span>
-<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>  },</span>
-<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">loss =</span> <span class="cf">function</span>(input, target) {</span>
-<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>    pred <span class="ot">&lt;-</span> ctx<span class="sc">$</span><span class="fu">model</span>(input)</span>
-<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (ctx<span class="sc">$</span>opt_name <span class="sc">==</span> <span class="st">&quot;opt_fc1&quot;</span>) </span>
-<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>      <span class="fu">nnf_cross_entropy</span>(pred, target) <span class="sc">+</span> <span class="fu">torch_norm</span>(self<span class="sc">$</span>fc1<span class="sc">$</span>weight, <span class="at">p =</span> <span class="dv">1</span>)</span>
-<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span> <span class="cf">if</span> (ctx<span class="sc">$</span>opt_name <span class="sc">==</span> <span class="st">&quot;opt_fc2&quot;</span>)</span>
-<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>      <span class="fu">nnf_cross_entropy</span>(pred, target)</span>
-<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>net <span class="ot">&lt;-</span> <span class="fu">nn_module</span>(</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>  <span class="st">&quot;Net&quot;</span>,</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>  <span class="at">initialize =</span> <span class="cf">function</span>() {</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>    self<span class="sc">$</span>fc1 <span class="ot">&lt;-</span> <span class="fu">nn_linear</span>(<span class="dv">100</span>, <span class="dv">50</span>)</span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>    self<span class="sc">$</span>fc1 <span class="ot">&lt;-</span> <span class="fu">nn_linear</span>(<span class="dv">50</span>, <span class="dv">10</span>)</span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>  },</span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>  <span class="at">forward =</span> <span class="cf">function</span>(x) {</span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>    x <span class="sc">%&gt;%</span> </span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a>      self<span class="sc">$</span><span class="fu">fc1</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a>      <span class="fu">nnf_relu</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a>      self<span class="sc">$</span><span class="fu">fc2</span>()</span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a>  },</span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a>  <span class="at">set_optimizers =</span> <span class="cf">function</span>(<span class="at">lr_fc1 =</span> <span class="fl">0.1</span>, <span class="at">lr_fc2 =</span> <span class="fl">0.01</span>) {</span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a>    <span class="fu">list</span>(</span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a>      <span class="at">opt_fc1 =</span> <span class="fu">optim_adam</span>(self<span class="sc">$</span>fc1<span class="sc">$</span>parameters, <span class="at">lr =</span> lr_fc1),</span>
+<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a>      <span class="at">opt_fc2 =</span> <span class="fu">optim_adam</span>(self<span class="sc">$</span>fc2<span class="sc">$</span>parameters, <span class="at">lr =</span> lr_fc2)</span>
+<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a>    )</span>
+<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a>  },</span>
+<span id="cb4-19"><a href="#cb4-19" tabindex="-1"></a>  <span class="at">loss =</span> <span class="cf">function</span>(input, target) {</span>
+<span id="cb4-20"><a href="#cb4-20" tabindex="-1"></a>    pred <span class="ot">&lt;-</span> ctx<span class="sc">$</span><span class="fu">model</span>(input)</span>
+<span id="cb4-21"><a href="#cb4-21" tabindex="-1"></a>  </span>
+<span id="cb4-22"><a href="#cb4-22" tabindex="-1"></a>    <span class="cf">if</span> (ctx<span class="sc">$</span>opt_name <span class="sc">==</span> <span class="st">&quot;opt_fc1&quot;</span>) </span>
+<span id="cb4-23"><a href="#cb4-23" tabindex="-1"></a>      <span class="fu">nnf_cross_entropy</span>(pred, target) <span class="sc">+</span> <span class="fu">torch_norm</span>(self<span class="sc">$</span>fc1<span class="sc">$</span>weight, <span class="at">p =</span> <span class="dv">1</span>)</span>
+<span id="cb4-24"><a href="#cb4-24" tabindex="-1"></a>    <span class="cf">else</span> <span class="cf">if</span> (ctx<span class="sc">$</span>opt_name <span class="sc">==</span> <span class="st">&quot;opt_fc2&quot;</span>)</span>
+<span id="cb4-25"><a href="#cb4-25" tabindex="-1"></a>      <span class="fu">nnf_cross_entropy</span>(pred, target)</span>
+<span id="cb4-26"><a href="#cb4-26" tabindex="-1"></a>  }</span>
+<span id="cb4-27"><a href="#cb4-27" tabindex="-1"></a>)</span></code></pre></div>
 <p>Notice that the model optimizers will be initialized according to the
 <code>set_optimizers()</code> method’s return value (a list). In this
 case, we are initializing the optimizers using different model
@@ -452,9 +453,9 @@ See <code>help(&quot;ctx&quot;)</code> for complete information about the contex
 object.</p>
 <p>We can finally <code>setup</code> and <code>fit</code> this module,
 however we no longer need to specify optimizers and loss functions.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>fitted <span class="ot">&lt;-</span> net <span class="sc">%&gt;%</span> </span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">setup</span>(<span class="at">metrics =</span> <span class="fu">list</span>(luz_metric_accuracy)) <span class="sc">%&gt;%</span> </span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit</span>(train_dl, <span class="at">epochs =</span> <span class="dv">10</span>, <span class="at">valid_data =</span> test_dl)</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>fitted <span class="ot">&lt;-</span> net <span class="sc">%&gt;%</span> </span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>  <span class="fu">setup</span>(<span class="at">metrics =</span> <span class="fu">list</span>(luz_metric_accuracy)) <span class="sc">%&gt;%</span> </span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>  <span class="fu">fit</span>(train_dl, <span class="at">epochs =</span> <span class="dv">10</span>, <span class="at">valid_data =</span> test_dl)</span></code></pre></div>
 <p>Now let’s re-implement this same model using the slightly more
 flexible approach of overriding the training and validation step.</p>
 </div>
@@ -465,48 +466,48 @@ implement the <code>step()</code> method. This allows us to flexibly
 modify what happens when training and validating for each batch in the
 dataset. You are now responsible for updating the weights by stepping
 the optimizers and back-propagating the loss.</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>net <span class="ot">&lt;-</span> <span class="fu">nn_module</span>(</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Net&quot;</span>,</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">initialize =</span> <span class="cf">function</span>() {</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    self<span class="sc">$</span>fc1 <span class="ot">&lt;-</span> <span class="fu">nn_linear</span>(<span class="dv">100</span>, <span class="dv">50</span>)</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    self<span class="sc">$</span>fc1 <span class="ot">&lt;-</span> <span class="fu">nn_linear</span>(<span class="dv">50</span>, <span class="dv">10</span>)</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  },</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">forward =</span> <span class="cf">function</span>(x) {</span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    x <span class="sc">%&gt;%</span> </span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>      self<span class="sc">$</span><span class="fu">fc1</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>      <span class="fu">nnf_relu</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>      self<span class="sc">$</span><span class="fu">fc2</span>()</span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  },</span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">set_optimizers =</span> <span class="cf">function</span>(<span class="at">lr_fc1 =</span> <span class="fl">0.1</span>, <span class="at">lr_fc2 =</span> <span class="fl">0.01</span>) {</span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">list</span>(</span>
-<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>      <span class="at">opt_fc1 =</span> <span class="fu">optim_adam</span>(self<span class="sc">$</span>fc1<span class="sc">$</span>parameters, <span class="at">lr =</span> lr_fc1),</span>
-<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">opt_fc2 =</span> <span class="fu">optim_adam</span>(self<span class="sc">$</span>fc2<span class="sc">$</span>parameters, <span class="at">lr =</span> lr_fc2)</span>
-<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>  },</span>
-<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">step =</span> <span class="cf">function</span>() {</span>
-<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    ctx<span class="sc">$</span>loss <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
-<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (opt_name <span class="cf">in</span> <span class="fu">names</span>(ctx<span class="sc">$</span>optimizers)) {</span>
-<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>      pred <span class="ot">&lt;-</span> ctx<span class="sc">$</span><span class="fu">model</span>(ctx<span class="sc">$</span>input)</span>
-<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>      opt <span class="ot">&lt;-</span> ctx<span class="sc">$</span>optimizers[[opt_name]]</span>
-<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>      loss <span class="ot">&lt;-</span> <span class="fu">nnf_cross_entropy</span>(pred, target)</span>
-<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>      </span>
-<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> (opt_name <span class="sc">==</span> <span class="st">&quot;opt_fc1&quot;</span>) {</span>
-<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>        <span class="co"># we have L1 regularization in layer 1</span></span>
-<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>        loss <span class="ot">&lt;-</span> <span class="fu">nnf_cross_entropy</span>(pred, target) <span class="sc">+</span> </span>
-<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>          <span class="fu">torch_norm</span>(self<span class="sc">$</span>fc1<span class="sc">$</span>weight, <span class="at">p =</span> <span class="dv">1</span>)</span>
-<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>      }</span>
-<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> (ctx<span class="sc">$</span>training) {</span>
-<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>        opt<span class="sc">$</span><span class="fu">zero_grad</span>()</span>
-<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>        loss<span class="sc">$</span><span class="fu">backward</span>()</span>
-<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>        opt<span class="sc">$</span><span class="fu">step</span>()  </span>
-<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>      }</span>
-<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>      </span>
-<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a>      ctx<span class="sc">$</span>loss[[opt_name]] <span class="ot">&lt;-</span> loss<span class="sc">$</span><span class="fu">detach</span>()</span>
-<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>net <span class="ot">&lt;-</span> <span class="fu">nn_module</span>(</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>  <span class="st">&quot;Net&quot;</span>,</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>  <span class="at">initialize =</span> <span class="cf">function</span>() {</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>    self<span class="sc">$</span>fc1 <span class="ot">&lt;-</span> <span class="fu">nn_linear</span>(<span class="dv">100</span>, <span class="dv">50</span>)</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>    self<span class="sc">$</span>fc1 <span class="ot">&lt;-</span> <span class="fu">nn_linear</span>(<span class="dv">50</span>, <span class="dv">10</span>)</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>  },</span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>  <span class="at">forward =</span> <span class="cf">function</span>(x) {</span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>    x <span class="sc">%&gt;%</span> </span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a>      self<span class="sc">$</span><span class="fu">fc1</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a>      <span class="fu">nnf_relu</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a>      self<span class="sc">$</span><span class="fu">fc2</span>()</span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a>  },</span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a>  <span class="at">set_optimizers =</span> <span class="cf">function</span>(<span class="at">lr_fc1 =</span> <span class="fl">0.1</span>, <span class="at">lr_fc2 =</span> <span class="fl">0.01</span>) {</span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a>    <span class="fu">list</span>(</span>
+<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a>      <span class="at">opt_fc1 =</span> <span class="fu">optim_adam</span>(self<span class="sc">$</span>fc1<span class="sc">$</span>parameters, <span class="at">lr =</span> lr_fc1),</span>
+<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a>      <span class="at">opt_fc2 =</span> <span class="fu">optim_adam</span>(self<span class="sc">$</span>fc2<span class="sc">$</span>parameters, <span class="at">lr =</span> lr_fc2)</span>
+<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a>    )</span>
+<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a>  },</span>
+<span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a>  <span class="at">step =</span> <span class="cf">function</span>() {</span>
+<span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a>    ctx<span class="sc">$</span>loss <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a>    <span class="cf">for</span> (opt_name <span class="cf">in</span> <span class="fu">names</span>(ctx<span class="sc">$</span>optimizers)) {</span>
+<span id="cb6-22"><a href="#cb6-22" tabindex="-1"></a>    </span>
+<span id="cb6-23"><a href="#cb6-23" tabindex="-1"></a>      ctx<span class="sc">$</span>pred <span class="ot">&lt;-</span> ctx<span class="sc">$</span><span class="fu">model</span>(ctx<span class="sc">$</span>input)</span>
+<span id="cb6-24"><a href="#cb6-24" tabindex="-1"></a>      opt <span class="ot">&lt;-</span> ctx<span class="sc">$</span>optimizers[[opt_name]]</span>
+<span id="cb6-25"><a href="#cb6-25" tabindex="-1"></a>      loss <span class="ot">&lt;-</span> <span class="fu">nnf_cross_entropy</span>(pred, target)</span>
+<span id="cb6-26"><a href="#cb6-26" tabindex="-1"></a>      </span>
+<span id="cb6-27"><a href="#cb6-27" tabindex="-1"></a>      <span class="cf">if</span> (opt_name <span class="sc">==</span> <span class="st">&quot;opt_fc1&quot;</span>) {</span>
+<span id="cb6-28"><a href="#cb6-28" tabindex="-1"></a>        <span class="co"># we have L1 regularization in layer 1</span></span>
+<span id="cb6-29"><a href="#cb6-29" tabindex="-1"></a>        loss <span class="ot">&lt;-</span> <span class="fu">nnf_cross_entropy</span>(pred, target) <span class="sc">+</span> </span>
+<span id="cb6-30"><a href="#cb6-30" tabindex="-1"></a>          <span class="fu">torch_norm</span>(self<span class="sc">$</span>fc1<span class="sc">$</span>weight, <span class="at">p =</span> <span class="dv">1</span>)</span>
+<span id="cb6-31"><a href="#cb6-31" tabindex="-1"></a>      }</span>
+<span id="cb6-32"><a href="#cb6-32" tabindex="-1"></a>        </span>
+<span id="cb6-33"><a href="#cb6-33" tabindex="-1"></a>      <span class="cf">if</span> (ctx<span class="sc">$</span>training) {</span>
+<span id="cb6-34"><a href="#cb6-34" tabindex="-1"></a>        opt<span class="sc">$</span><span class="fu">zero_grad</span>()</span>
+<span id="cb6-35"><a href="#cb6-35" tabindex="-1"></a>        loss<span class="sc">$</span><span class="fu">backward</span>()</span>
+<span id="cb6-36"><a href="#cb6-36" tabindex="-1"></a>        opt<span class="sc">$</span><span class="fu">step</span>()  </span>
+<span id="cb6-37"><a href="#cb6-37" tabindex="-1"></a>      }</span>
+<span id="cb6-38"><a href="#cb6-38" tabindex="-1"></a>      </span>
+<span id="cb6-39"><a href="#cb6-39" tabindex="-1"></a>      ctx<span class="sc">$</span>loss[[opt_name]] <span class="ot">&lt;-</span> loss<span class="sc">$</span><span class="fu">detach</span>()</span>
+<span id="cb6-40"><a href="#cb6-40" tabindex="-1"></a>    }</span>
+<span id="cb6-41"><a href="#cb6-41" tabindex="-1"></a>  }</span>
+<span id="cb6-42"><a href="#cb6-42" tabindex="-1"></a>)</span></code></pre></div>
 <p>The important things to notice here are:</p>
 <ul>
 <li><p>The <code>step()</code> method is used for both training and
@@ -529,6 +530,10 @@ called. You can still cal them manually by adding
 training step. See the code for <code>fit_one_batch()</code> and
 <code>valid_one_batch</code> to find all the callbacks that won’t be
 called.</p></li>
+<li><p>If you want luz metrics to work with your custom
+<code>step()</code> method, you must assign <code>ctx$pred</code> with
+the model predictions as metrics will always be called with
+<code>metric$update(ctx$pred, ctx$target)</code>.</p></li>
 </ul>
 </div>
 <div id="next-steps" class="section level2">

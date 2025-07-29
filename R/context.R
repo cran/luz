@@ -17,10 +17,9 @@ NULL
 #' See also [ctx].
 #'
 #' @param name name of the metric
-#' @param value value to log
 #' @param what (string) What you are logging.
 #' @param set (string) Usually 'train' or 'valid' indicating the set you want
-#'  to lot to. But can be arbitrary info.
+#'  to log to. But can be arbitrary info.
 #' @param value Arbitrary value to log.
 #' @param index Index that this value should be logged. If `NULL` the value
 #'  is added to the end of list, otherwise the index is used.
@@ -80,7 +79,7 @@ context <- R6::R6Class(
       invisible(self)
     },
     #' @description
-    #' Log a metric gen its name and value.
+    #' Log a metric by its name and value.
     #' Metric values are indexed by epoch.
     log_metric = function(name, value) {
       set <- if (self$training) "train" else "valid"
@@ -394,6 +393,12 @@ context <- R6::R6Class(
       if (missing(new))
         return(private$.metrics)
       private$.metrics <- new
+    },
+    #' @field step_opt Defines how step is called for the optimizer. It must be a function
+    #' taking an optimizer as argument.
+    step_opt = function(new) {
+      if (missing(new)) return(private$.step_opt)
+      private$.step_opt <- new
     }
   ),
   private = list(
@@ -419,6 +424,7 @@ context <- R6::R6Class(
     .handlers = list(),
     .epoch_handlers = list(),
     .metrics = NULL,
+    .step_opt = NULL,
 
     # Fields that are overwritten during model training. They are more or
     # less transient, and their values don't make sense after the model
@@ -457,6 +463,7 @@ fit_context <- R6::R6Class(
       self$model <- do.call(module, self$hparams)
       self$optimizers <- do.call(self$model$set_optimizers, self$opt_hparams)
       self$loss_fn <- self$model$loss
+      self$step_opt <- default_step_opt
 
       if (rlang::is_scalar_double(valid_data)) {
         c(data, valid_data) %<-% create_valid_data(data, valid_data)
@@ -591,4 +598,8 @@ ctx_check_optimizers <- function(new) {
   }
 
   invisible(new)
+}
+
+default_step_opt <- function(opt) {
+  opt$step()
 }

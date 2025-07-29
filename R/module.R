@@ -16,7 +16,7 @@
 #' @param metrics (`list`, optional) A list of metrics to be tracked during
 #' the training procedure. Sometimes, you want some metrics to be evaluated
 #' only during training or validation, in this case you can pass a [luz_metric_set()]
-#' object to specify mmetrics used in each stage.
+#' object to specify metrics used in each stage.
 #' @param backward (`function`) A functions that takes the loss scalar values as
 #' it's parameter. It must call `$backward()` or [torch::autograd_backward()].
 #' In general you don't need to set this parameter unless you need to customize
@@ -187,7 +187,7 @@ get_opt_hparams <- function(module) {
 #'   `data` will be used for validation.
 #'
 #' @param accelerator (accelerator, optional) An optional [accelerator()] object
-#'   used to configure device placement of the components like [nn_module]s,
+#'   used to configure device placement of the components like [torch::nn_module]s,
 #'   optimizers and batches of data.
 #'
 #' @param verbose (logical, optional) An optional boolean value indicating if
@@ -229,7 +229,7 @@ fit.luz_module_generator <- function(
 
   enable_mps_fallback()
   module <- object
-  ellipsis::check_dots_empty()
+  rlang::check_dots_empty()
 
   # Initialize context:
   ctx <- fit_context$new(
@@ -485,7 +485,7 @@ fit_one_batch <-function(ctx) {
     ctx$model$backward(ctx$loss_grad)
 
     ctx$call_callbacks("on_train_batch_before_step")
-    ctx$opt$step()
+    ctx$step_opt(ctx$opt)
     ctx$opt$zero_grad()
     ctx$call_callbacks("on_train_batch_after_step")
   }
@@ -603,8 +603,13 @@ get_metrics.luz_module_evaluation <- function(object, ...) {
   res[, c("metric", "value")]
 }
 
+can_use_mps <- function() {
+  arch <- Sys.info()["machine"]
+  identical(Sys.getenv("LUZ_DISABLE_MPS", "FALSE"), "FALSE") && "arm64" %in% arch && torch::backends_mps_is_available()
+}
+
 enable_mps_fallback <- function() {
-  if (!torch::backends_mps_is_available())
+  if (!can_use_mps())
     return(invisible(NULL))
 
   fallback <- Sys.getenv("PYTORCH_ENABLE_MPS_FALLBACK", unset = "")

@@ -26,7 +26,7 @@ that you are tracking during training. The metric name is case insensitive.}
 (closer to zero is better).}
 
 \item{baseline}{An initial value that will be used as the best seen value
-in the begining. Model will stopm training if no better than baseline value
+in the begining. Model will stop training if no better than baseline value
 is found in the first \code{patience} epochs.}
 }
 \value{
@@ -48,18 +48,19 @@ cb <- luz_callback_early_stopping()
 }
 \seealso{
 Other luz_callbacks: 
+\code{\link{luz_callback}()},
 \code{\link{luz_callback_auto_resume}()},
 \code{\link{luz_callback_csv_logger}()},
 \code{\link{luz_callback_interrupt}()},
 \code{\link{luz_callback_keep_best_model}()},
 \code{\link{luz_callback_lr_scheduler}()},
 \code{\link{luz_callback_metrics}()},
+\code{\link{luz_callback_mixed_precision}()},
 \code{\link{luz_callback_mixup}()},
 \code{\link{luz_callback_model_checkpoint}()},
 \code{\link{luz_callback_profile}()},
 \code{\link{luz_callback_progress}()},
 \code{\link{luz_callback_resume_from_checkpoint}()},
-\code{\link{luz_callback_train_valid}()},
-\code{\link{luz_callback}()}
+\code{\link{luz_callback_train_valid}()}
 }
 \concept{luz_callbacks}
